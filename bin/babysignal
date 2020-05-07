@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -e
+
+type="$1"
+key="$2"
+
+base_url="localhost:8888/api/babysitter/signal"
+curl "${base_url}?type=${type}&key=${key}" > /dev/null 2>&1
+
