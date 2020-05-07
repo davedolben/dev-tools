@@ -1,0 +1,21 @@
+.task {
+  display: flex;
+  flex-direction: row;
+  padding: 3px 5px;
+}
+.task:not(:last-child) {
+  border-bottom: solid 1px black;
+}
+.task-name {
+  padding-right: 12px;
+}
+.task-status {
+  flex-grow: 1000;
+  text-align: right;
+}
+.task-running {
+  background-color: rgb(243, 185, 24);
+}
+.task-complete {
+  background-color: rgb(24, 255, 36);
+}
