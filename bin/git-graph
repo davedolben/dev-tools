@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
+#
+# Prints a pretty graph of the git commit history starting at HEAD (or the branches/commits given as args).
+#
+
 git log --graph --abbrev-commit --decorate --format=oneline "$@"
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#
+# Prints a list of all git commits that share 'master' as a base.
+#
+
+set -e
+
+git branch --contains master | cut -c 3-
+
