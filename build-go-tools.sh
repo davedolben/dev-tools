@@ -9,4 +9,5 @@ mkdir -p go/bin
 
 go build -o go/bin/fileserver ddolben/dev-tools/fileserver
 go build -o go/bin/babysitter ddolben/dev-tools/babysitter
+go build -o go/bin/notes-server ddolben/notes
 
