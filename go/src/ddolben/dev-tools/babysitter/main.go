@@ -8,8 +8,8 @@ import (
 )
 
 type Signal struct {
-  Type string
-  Key string
+  Type string `json:"type"`
+  Key string `json:"key"`
 }
 
 type MessageRouter struct {
@@ -23,6 +23,7 @@ func NewMessageRouter() *MessageRouter {
 }
 
 func (r *MessageRouter) Signal(sig Signal) {
+  log.Printf("signal: %s [%s]", sig.Key, sig.Type)
   r.signalCh <- sig
 }
 
@@ -42,23 +43,17 @@ func handleSignal(router *MessageRouter) http.HandlerFunc {
   }
 }
 
-func handleMonitor(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "Hello world")
-}
-
 func main() {
   fPort := flag.Int("port", 8888, "HTTP port")
+  fStaticDir := flag.String("static_dir", "www", "Directory with static files")
   flag.Parse()
 
   router := NewMessageRouter()
-  go func() {
-    for sig := range router.OnSignal() {
-      log.Printf("signal: %s [%s]", sig.Key, sig.Type)
-    }
-  }()
+
+  registerHandlers(router)
 
   http.HandleFunc("/api/babysitter/signal", handleSignal(router))
-  http.HandleFunc("/", handleMonitor)
+  http.Handle("/", http.FileServer(http.Dir(*fStaticDir)))
 
   host := fmt.Sprintf(":%d", *fPort)
   log.Printf("serving on %s", host)
