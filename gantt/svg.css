@@ -1,0 +1,19 @@
+.bottom-padded {
+  padding-bottom: 12px;
+}
+
+input[type="text"] {
+  padding: 3px 5px;
+}
+
+.button {
+  display: inline-block;
+  cursor: pointer;
+  padding: 3px 5px;
+  border: solid 1px black;
+  border-radius: 3px;
+  background-color: #eee;
+}
+.button:hover {
+  box-shadow: 0 0 5px 2px black;
+}

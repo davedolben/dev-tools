@@ -1,0 +1,23 @@
+<html>
+<head>
+  <title>Gantt</title>
+  <link rel="stylesheet" type="text/css" href="/svg.css" />
+</head>
+
+<body>
+  <h2 id="header"></h2>
+  <div id="controls">
+    <div>
+      <input type="text" id="data-url-input" placeholder="Data URL" />
+      <a id="open-url-button" class="button">Open</a>
+    </div>
+  </div>
+  <div id="viz"></div>
+
+  <!-- Load D3.js first -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <!-- .attrs() -->
+  <script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+  <script type="text/javascript" src="svg.js"></script>
+</body>
+</html>
