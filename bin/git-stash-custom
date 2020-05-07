@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+#
+# A custom version of git stash that commits all staged changes to a branch off HEAD
+#
+
+branch=custom-stash
+
+if [[ "$1" == "stash" ]]; then
+  git checkout -b $branch && git commit -m "STASH" && git co -
+elif [[ "$1" == "apply" ]]; then
+  git checkout $branch && git reset --soft HEAD^ && git co - && git branch -D $branch
+fi
+
