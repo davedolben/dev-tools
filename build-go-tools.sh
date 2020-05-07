@@ -6,4 +6,5 @@ cd "$script_dir"
 mkdir -p go/bin
 
 go build -o go/bin/fileserver ddolben/dev-tools/fileserver
+go build -o go/bin/babysitter ddolben/dev-tools/babysitter
 

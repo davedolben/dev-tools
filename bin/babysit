@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -e
+
+base_url="localhost:8888/api/babysitter/signal"
+
+name="$1"
+if [ -z "$name" ]; then
+  name="UNKNOWN"
+fi
+random_value="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+key="${name}:${random_value}"
+
+printf "> Babysitting...\n"
+curl "${base_url}?type=start&key=${key}" > /dev/null 2>&1
+
+# Pipe stdin back to stdout
+cat <&0
+
+printf "> Babysat.\n"
+curl "${base_url}?type=end&key=${key}" > /dev/null 2>&1
+
