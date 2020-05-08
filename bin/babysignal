@@ -2,9 +2,10 @@
 
 set -e
 
-type="$1"
-key="$2"
+key="$1"
+id="$2"
+type="$3"
 
 base_url="localhost:8888/api/babysitter/signal"
-curl "${base_url}?type=${type}&key=${key}" > /dev/null 2>&1
+curl "${base_url}?type=${type}&key=${key}&id=${id}" > /dev/null 2>&1
 

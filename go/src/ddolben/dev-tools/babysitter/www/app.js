@@ -1,9 +1,10 @@
 (function() {
 
 class TaskTracker {
-  constructor(rootElem, name) {
+  constructor(rootElem, name, id) {
     this.rootElem = rootElem;
     this.name = name;
+    this.id = id;
 
     this.rootElem.classList.add("task");
 
@@ -11,6 +12,11 @@ class TaskTracker {
     nameElem.classList.add("task-name")
     nameElem.innerHTML = name;
     this.rootElem.appendChild(nameElem);
+
+    let idElem = document.createElement("span");
+    idElem.classList.add("task-id")
+    idElem.innerHTML = "(" + id + ")";
+    this.rootElem.appendChild(idElem);
     
     this.statusElem = document.createElement("span");
     this.statusElem.classList.add("task-status");
@@ -38,34 +44,36 @@ let logRoot = appRoot.querySelector("#log");
 
 let tasks = {};
 
-function addTask(key) {
-  if (key in tasks) {
-    tasks[key].update("running");
+function addTask(key, id) {
+  let taskKey = key + ":" + id;
+  if (taskKey in tasks) {
+    tasks[taskKey].update("running");
   } else {
     let newElem = document.createElement("div");
     tasksRoot.prepend(newElem);
-    tasks[key] = new TaskTracker(newElem, key);
+    tasks[taskKey] = new TaskTracker(newElem, key, id);
   }
 }
 
-function completeTask(key) {
-  if (!(key in tasks)) {
-    console.error("Tried to end task that wasn't started:", key);
+function completeTask(key, id) {
+  let taskKey = key + ":" + id;
+  if (!(taskKey in tasks)) {
+    console.error("Tried to end task that wasn't started:", taskKey);
     return;
   }
-  tasks[key].update("complete");
+  tasks[taskKey].update("complete");
 }
 
 function onSignal(data) {
   let newDiv = document.createElement("div");
-  newDiv.innerHTML = "[" + data.type + "] " + data.key;
+  newDiv.innerHTML = "[" + data.type + "] " + data.key + " - " + data.id;
   logRoot.prepend(newDiv);
 
   if (data.type === "start") {
-    addTask(data.key);
+    addTask(data.key, data.id);
   }
   if (data.type === "end") {
-    completeTask(data.key);
+    completeTask(data.key, data.id);
   }
 }
 

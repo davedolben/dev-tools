@@ -10,6 +10,7 @@ import (
 type Signal struct {
   Type string `json:"type"`
   Key string `json:"key"`
+  ID string `json:"id"`
 }
 
 type MessageRouter struct {
@@ -35,9 +36,11 @@ func handleSignal(router *MessageRouter) http.HandlerFunc {
   return func(w http.ResponseWriter, r *http.Request) {
     key := r.FormValue("key")
     t := r.FormValue("type")
+    id := r.FormValue("id")
     router.Signal(Signal{
       Type: t,
       Key: key,
+      ID: id,
     })
     fmt.Fprintf(w, "thank you")
   }
