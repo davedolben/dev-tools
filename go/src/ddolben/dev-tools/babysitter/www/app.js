@@ -1,5 +1,11 @@
 (function() {
 
+function prettyTime(time_s) {
+  var date = new Date(0);
+  date.setSeconds(time_s);
+  return date.toISOString().substr(11, 8);
+}
+
 class TaskTracker {
   constructor(rootElem, name, id) {
     this.rootElem = rootElem;
@@ -23,18 +29,27 @@ class TaskTracker {
     this.rootElem.appendChild(this.statusElem);
 
     this.update("running");
+
+    this.runtime_s = 0;
+    this.timer = setInterval(() => {
+      this.runtime_s++;
+      this.statusElem.innerHTML = "running for " + prettyTime(this.runtime_s);
+    }, 1000)
   }
 
   update(status) {
     if (status === "running") {
       this.rootElem.classList.add("task-running");
       this.rootElem.classList.remove("task-complete");
-    }
-    if (status === "complete") {
+      this.statusElem.innerHTML = "running for 00:00:00";
+    } else if (status === "complete") {
+      clearInterval(this.timer);
       this.rootElem.classList.remove("task-running");
       this.rootElem.classList.add("task-complete");
+      this.statusElem.innerHTML = "complete in " + prettyTime(this.runtime_s);
+    } else {
+      this.statusElem.innerHTML = status;
     }
-    this.statusElem.innerHTML = status;
   }
 }
 
