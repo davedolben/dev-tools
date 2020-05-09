@@ -11,6 +11,8 @@ type Signal struct {
   Type string `json:"type"`
   Key string `json:"key"`
   ID string `json:"id"`
+  Cmd string `json:"cmd"`
+  Cwd string `json:"cwd"`
 }
 
 type MessageRouter struct {
@@ -24,7 +26,7 @@ func NewMessageRouter() *MessageRouter {
 }
 
 func (r *MessageRouter) Signal(sig Signal) {
-  log.Printf("signal: %s [%s]", sig.Key, sig.Type)
+  log.Printf("signal: %+v", sig)
   r.signalCh <- sig
 }
 
@@ -37,10 +39,14 @@ func handleSignal(router *MessageRouter) http.HandlerFunc {
     key := r.FormValue("key")
     t := r.FormValue("type")
     id := r.FormValue("id")
+    cmd := r.FormValue("cmd")
+    cwd := r.FormValue("cwd")
     router.Signal(Signal{
       Type: t,
       Key: key,
       ID: id,
+      Cmd: cmd,
+      Cwd: cwd,
     })
     fmt.Fprintf(w, "thank you")
   }

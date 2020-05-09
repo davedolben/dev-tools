@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 base_url="localhost:8888/api/babysitter/signal"
 
 key="$1"
@@ -10,12 +8,27 @@ if [ -z "$key" ]; then
 fi
 random_value="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 
-printf "> Babysitting...\n"
-curl "${base_url}?type=start&key=${key}&id=${random_value}" > /dev/null 2>&1
+# TODO: report failures
 
-# Pipe stdin back to stdout
-cat <&0
+args=( "${@:2}" )
+args_str="$(printf "'%s' " "${args[@]}")"
 
-printf "> Babysat.\n"
-curl "${base_url}?type=end&key=${key}&id=${random_value}" > /dev/null 2>&1
+printf "> Babysitting...\n\n"
+curl -X POST \
+  -F "type=start" \
+  -F "key=${key}" \
+  -F "id=${random_value}" \
+  -F "cmd=${args_str}" \
+  -F "cwd=$(pwd)" \
+  "${base_url}" > /dev/null 2>&1
+
+# Run all args except the first as if they were a command.
+"${@:2}"
+
+printf "\n> Babysat.\n"
+curl -X POST \
+  -F "type=end" \
+  -F "key=${key}" \
+  -F "id=${random_value}" \
+  "${base_url}" > /dev/null 2>&1
 
