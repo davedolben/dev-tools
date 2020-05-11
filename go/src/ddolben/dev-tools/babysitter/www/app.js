@@ -1,5 +1,17 @@
 (function() {
 
+let fullscreenModal = document.querySelector("#fullscreen-modal");
+function hideModal() {
+  fullscreenModal.classList.add("hidden");
+}
+function showModal(message) {
+  fullscreenModal.classList.remove("hidden");
+  document.querySelector("#fullscreen-modal-content").innerHTML = message;
+}
+fullscreenModal.onclick = () => {
+  hideModal();
+};
+
 function prettyTime(time_s) {
   var date = new Date(0);
   date.setSeconds(time_s);
@@ -47,6 +59,7 @@ class TaskTracker {
       this.rootElem.classList.remove("task-running");
       this.rootElem.classList.add("task-complete");
       this.statusElem.innerHTML = "complete in " + prettyTime(this.runtime_s);
+      showModal(this.name + " complete!");
     } else {
       this.statusElem.innerHTML = status;
     }
