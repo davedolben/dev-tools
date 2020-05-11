@@ -16,22 +16,30 @@ type Signal struct {
 }
 
 type MessageRouter struct {
-  signalCh chan Signal
+  channels map[chan Signal]struct{}
 }
 
 func NewMessageRouter() *MessageRouter {
   return &MessageRouter{
-    signalCh: make(chan Signal, 100),
+    channels: make(map[chan Signal]struct{}),
   }
 }
 
 func (r *MessageRouter) Signal(sig Signal) {
   log.Printf("signal: %+v", sig)
-  r.signalCh <- sig
+  for ch := range r.channels {
+    ch <- sig
+  }
 }
 
 func (r *MessageRouter) OnSignal() chan Signal {
-  return r.signalCh
+  newCh := make(chan Signal, 100)
+  r.channels[newCh] = struct{}{}
+  return newCh
+}
+
+func (r *MessageRouter) UnregisterChannel(ch chan Signal) {
+  delete(r.channels, ch)
 }
 
 func handleSignal(router *MessageRouter) http.HandlerFunc {
@@ -60,6 +68,7 @@ func main() {
   router := NewMessageRouter()
 
   registerHandlers(router)
+  registerMemoryHandlers(router, *fStaticDir)
 
   http.HandleFunc("/api/babysitter/signal", handleSignal(router))
   http.Handle("/", http.FileServer(http.Dir(*fStaticDir)))

@@ -38,6 +38,7 @@ func handleWs(router *MessageRouter) http.HandlerFunc {
 
 		go func() {
 			ch := router.OnSignal()
+			defer router.UnregisterChannel(ch)
 			for {
 				select {
 				case sig := <- ch:
