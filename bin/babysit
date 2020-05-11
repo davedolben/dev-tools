@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-base_url="localhost:8888/api/babysitter/signal"
+base_url="https://localhost:8888/api/babysitter/signal"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+certfile="${script_dir}/../ssl/Certificate.crt"
+keyfile="${script_dir}/../ssl/Key.key"
 
 key="$1"
 if [ -z "$key" ]; then
@@ -13,6 +16,9 @@ args_str="$(printf "'%s' " "${args[@]}")"
 
 printf "> Babysitting...\n\n"
 curl -X POST \
+  --cert "${certfile}" \
+  --key "${keyfile}" \
+  -k \
   -F "type=start" \
   -F "key=${key}" \
   -F "id=${random_value}" \
@@ -31,6 +37,9 @@ fi
 
 printf "\n> Babysat.\n"
 curl -X POST \
+  --cert "${certfile}" \
+  --key "${keyfile}" \
+  -k \
   -F "type=${action}" \
   -F "key=${key}" \
   -F "id=${random_value}" \

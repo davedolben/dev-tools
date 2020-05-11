@@ -6,6 +6,16 @@ key="$1"
 id="$2"
 type="$3"
 
-base_url="localhost:8888/api/babysitter/signal"
-curl "${base_url}?type=${type}&key=${key}&id=${id}" > /dev/null 2>&1
+base_url="https://localhost:8888/api/babysitter/signal"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+certfile="${script_dir}/../ssl/Certificate.crt"
+keyfile="${script_dir}/../ssl/Key.key"
 
+curl -X POST \
+  --cert "${certfile}" \
+  --key "${keyfile}" \
+  -k \
+  -F "type=${type}" \
+  -F "key=${key}" \
+  -F "id=${id}" \
+  "${base_url}" > /dev/null 2>&1

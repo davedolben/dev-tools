@@ -63,6 +63,9 @@ func handleSignal(router *MessageRouter) http.HandlerFunc {
 func main() {
   fPort := flag.Int("port", 8888, "HTTP port")
   fStaticDir := flag.String("static_dir", "www", "Directory with static files")
+  fUseSSL := flag.Bool("use_ssl", false, "If true, starts server over SSL. Requires ssl_cert and ssl_key args")
+  fSSLCert := flag.String("ssl_cert", "Certificate.crt", "SSL certificate file")
+  fSSLKey := flag.String("ssl_key", "Key.key", "SSL key file")
   flag.Parse()
 
   router := NewMessageRouter()
@@ -75,6 +78,11 @@ func main() {
 
   host := fmt.Sprintf(":%d", *fPort)
   log.Printf("serving on %s", host)
-  http.ListenAndServe(host, nil)
+  if *fUseSSL {
+    log.Printf("using SSL")
+    log.Fatal(http.ListenAndServeTLS(host, *fSSLCert, *fSSLKey, nil))
+  } else {
+    log.Fatal(http.ListenAndServe(host, nil))
+  }
 }
 

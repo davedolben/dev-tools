@@ -1,5 +1,7 @@
 (function() {
 
+notify.init();
+
 let fullscreenModal = document.querySelector("#fullscreen-modal");
 let fullscreenModalContent = document.querySelector("#fullscreen-modal-content");
 function hideModal() {
@@ -68,10 +70,14 @@ class TaskTracker {
       this.statusElem.innerHTML = "complete in " + prettyTime(this.runtime_s);
       if (status === "success") {
         this.rootElem.classList.add("task-succeeded");
-        showModal(this.name + " succeeded!");
+        let msg = this.name + " succeeded!";
+        showModal(msg);
+        notify.notify(msg);
       } else {
         this.rootElem.classList.add("task-failed");
-        showModal(this.name + " failed!", true);
+        let msg = this.name + " failed!";
+        showModal(msg, true);
+        notify.notify(msg);
       }
     } else {
       this.statusElem.innerHTML = status;
@@ -119,7 +125,11 @@ function onSignal(data) {
 }
 
 function connect() {
-  let ws = new WebSocket("ws://" + window.location.host + "/api/babysitter/ws");
+  let protocol = "ws:";
+  if (window.location.protocol === "https:") {
+    protocol = "wss:";
+  }
+  let ws = new WebSocket(protocol + "//" + window.location.host + "/api/babysitter/ws");
   ws.onopen = (e) => {
     console.log("Websocket open");
   };
