@@ -5,7 +5,7 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 babysitter \
   --static_dir=${script_dir}/../go/src/ddolben/dev-tools/babysitter/www \
   --use_ssl \
-  --cert=${script_dir}/../ssl/Certificate.crt \
-  --key=${script_dir}/../ssl/Key.key \
+  --ssl_cert=${script_dir}/../ssl/Certificate.crt \
+  --ssl_key=${script_dir}/../ssl/Key.key \
   "$@"
 
