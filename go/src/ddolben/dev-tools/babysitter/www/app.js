@@ -1,12 +1,20 @@
 (function() {
 
 let fullscreenModal = document.querySelector("#fullscreen-modal");
+let fullscreenModalContent = document.querySelector("#fullscreen-modal-content");
 function hideModal() {
   fullscreenModal.classList.add("hidden");
 }
-function showModal(message) {
+function showModal(message, failure) {
   fullscreenModal.classList.remove("hidden");
-  document.querySelector("#fullscreen-modal-content").innerHTML = message;
+  if (failure) {
+    fullscreenModalContent.classList.remove("pulse-border-success");
+    fullscreenModalContent.classList.add("pulse-border-failure");
+  } else {
+    fullscreenModalContent.classList.add("pulse-border-success");
+    fullscreenModalContent.classList.remove("pulse-border-failure");
+  }
+  fullscreenModalContent.innerHTML = message;
 }
 fullscreenModal.onclick = () => {
   hideModal();
@@ -54,12 +62,17 @@ class TaskTracker {
       this.rootElem.classList.add("task-running");
       this.rootElem.classList.remove("task-complete");
       this.statusElem.innerHTML = "running for 00:00:00";
-    } else if (status === "complete") {
+    } else if (status === "success" || status === "failure") {
       clearInterval(this.timer);
       this.rootElem.classList.remove("task-running");
-      this.rootElem.classList.add("task-complete");
       this.statusElem.innerHTML = "complete in " + prettyTime(this.runtime_s);
-      showModal(this.name + " complete!");
+      if (status === "success") {
+        this.rootElem.classList.add("task-succeeded");
+        showModal(this.name + " succeeded!");
+      } else {
+        this.rootElem.classList.add("task-failed");
+        showModal(this.name + " failed!", true);
+      }
     } else {
       this.statusElem.innerHTML = status;
     }
@@ -83,13 +96,13 @@ function addTask(key, id) {
   }
 }
 
-function completeTask(key, id) {
+function completeTask(key, id, status) {
   let taskKey = key + ":" + id;
   if (!(taskKey in tasks)) {
     console.error("Tried to end task that wasn't started:", taskKey);
     return;
   }
-  tasks[taskKey].update("complete");
+  tasks[taskKey].update(status);
 }
 
 function onSignal(data) {
@@ -100,8 +113,8 @@ function onSignal(data) {
   if (data.type === "start") {
     addTask(data.key, data.id);
   }
-  if (data.type === "end") {
-    completeTask(data.key, data.id);
+  if (data.type === "success" || data.type === "failure") {
+    completeTask(data.key, data.id, data.type);
   }
 }
 

@@ -34,7 +34,7 @@
   border-radius: 6px;
 }
 
-@keyframes shadow-pulse {
+@keyframes shadow-pulse-green {
   0% {
     box-shadow: 0 0 0 0 rgba(0, 255, 0, 1.0);
   }
@@ -42,8 +42,20 @@
     box-shadow: 0 0 0 100px rgba(0, 255, 0, 0);
   }
 }
-.pulse-border {
-  animation: shadow-pulse 1s infinite;
+.pulse-border-success {
+  animation: shadow-pulse-green 1s infinite;
+}
+
+@keyframes shadow-pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 1.0);
+  }
+  100% {
+    box-shadow: 0 0 0 100px rgba(255, 0, 0, 0);
+  }
+}
+.pulse-border-failure {
+  animation: shadow-pulse-red 1s infinite;
 }
 
 .task {
@@ -64,6 +76,9 @@
 .task-running {
   background-color: rgb(243, 185, 24);
 }
-.task-complete {
+.task-succeeded {
   background-color: rgb(24, 255, 36);
+}
+.task-failed {
+  background-color: rgb(255, 17, 17);
 }
