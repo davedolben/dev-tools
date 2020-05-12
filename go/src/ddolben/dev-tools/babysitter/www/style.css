@@ -1,5 +1,46 @@
+/*
+   *** Color Scheme ***
+   https://coolors.co/ef476f-ffd166-06d6a0-118ab2-073b4c
+   Red: ef476f   (239, 71, 111)
+   Yellow: ffd166   (255, 209, 102)
+   Green: 06d6a0   (6, 214, 160)
+   Blue: 118ab2   (17, 138, 178)
+   Dark Blue: 073b4c   (7, 59, 76)
+*/
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial;
+}
+#container {
+  padding: 5px;
+}
 .hidden {
   display: none;
+}
+
+.top-bar {
+  width: 100%;
+  height: 36px;
+  background: #118ab2;
+  border-bottom: solid 1px black;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+}
+.top-bar-button {
+  font-size: 18px;
+  line-height: 18px;
+  padding: 9px 12px;
+  text-decoration: none;
+  display: inline-block;
+  color: white;
+  border-right: solid 1px black;
+}
+.top-bar-button:hover {
+  cursor: pointer;
+  background-color: #073b4c;
 }
 
 .fill {
@@ -36,10 +77,10 @@
 
 @keyframes shadow-pulse-green {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 0, 1.0);
+    box-shadow: 0 0 0 0 rgba(6, 214, 160, 1.0);
   }
   100% {
-    box-shadow: 0 0 0 100px rgba(0, 255, 0, 0);
+    box-shadow: 0 0 0 100px rgba(6, 214, 160, 0);
   }
 }
 .pulse-border-success {
@@ -48,10 +89,10 @@
 
 @keyframes shadow-pulse-red {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 1.0);
+    box-shadow: 0 0 0 0 rgba(239, 71, 111, 1.0);
   }
   100% {
-    box-shadow: 0 0 0 100px rgba(255, 0, 0, 0);
+    box-shadow: 0 0 0 100px rgba(239, 71, 111, 0);
   }
 }
 .pulse-border-failure {
@@ -74,11 +115,11 @@
   text-align: right;
 }
 .task-running {
-  background-color: rgb(243, 185, 24);
+  background-color: rgb(255, 209, 102);
 }
 .task-succeeded {
-  background-color: rgb(24, 255, 36);
+  background-color: rgb(6, 214, 160);
 }
 .task-failed {
-  background-color: rgb(255, 17, 17);
+  background-color: rgb(239, 71, 111);
 }
