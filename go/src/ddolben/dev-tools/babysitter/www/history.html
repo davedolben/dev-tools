@@ -1,16 +1,25 @@
 <html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/style.css" />
+</head>
 <body>
-  <h2>Common Commands</h2>
-  <div>
-    {{ range .CommonCommands }}
-    <div>( {{ .Count }} ) {{ .Cmd.Exe }} [ {{.Cmd.Cwd}} ]</div>
-    {{ end }}
+  <div class="top-bar">
+    <a href="/" class="top-bar-button">Monitor</a>
+    <a href="/history" class="top-bar-button">History</a>
   </div>
-  <h2>Recent Commands</h2>
-  <div>
-    {{ range .RecentCommands }}
-    <div>{{ .Exe }} [ {{.Cwd}} ]</div>
-    {{ end }}
+  <div id="container">
+    <h2>Common Commands</h2>
+    <div>
+      {{ range .CommonCommands }}
+      <div>( {{ .Count }} ) {{ .Cmd.Exe }} [ {{.Cmd.Cwd}} ]</div>
+      {{ end }}
+    </div>
+    <h2>Recent Commands</h2>
+    <div>
+      {{ range .RecentCommands }}
+      <div>{{ .Exe }} [ {{.Cwd}} ]</div>
+      {{ end }}
+    </div>
   </div>
 </body>
 </html>
