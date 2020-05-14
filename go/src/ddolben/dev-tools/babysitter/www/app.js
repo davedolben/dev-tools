@@ -64,6 +64,7 @@ class TaskTracker {
       this.rootElem.classList.add("task-running");
       this.rootElem.classList.remove("task-complete");
       this.statusElem.innerHTML = "running for 00:00:00";
+      hideModal();
     } else if (status === "success" || status === "failure") {
       clearInterval(this.timer);
       this.rootElem.classList.remove("task-running");
