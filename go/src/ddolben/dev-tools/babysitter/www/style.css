@@ -100,15 +100,22 @@ body {
 }
 
 .task {
+  border: solid 1px rgb(100, 100, 100);
+  border-radius: 6px;
   display: flex;
   flex-direction: row;
-  padding: 3px 5px;
+  padding: 5px 8px;
 }
 .task:not(:last-child) {
-  border-bottom: solid 1px black;
+  /* border-bottom: solid 1px black; */
+  margin-bottom: 6px;
 }
-.task-name {
-  padding-right: 12px;
+.task-detail {
+  display: none;
+  padding-left: 12px;
+}
+.task:hover > .task-detail {
+  display: inline-block;
 }
 .task-status {
   flex-grow: 1000;

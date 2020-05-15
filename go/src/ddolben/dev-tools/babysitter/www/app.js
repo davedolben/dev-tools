@@ -41,10 +41,14 @@ class TaskTracker {
     nameElem.innerHTML = name;
     this.rootElem.appendChild(nameElem);
 
+    let taskDetailElem = document.createElement("span");
+    taskDetailElem.classList.add("task-detail");
+    this.rootElem.appendChild(taskDetailElem);
+
     let idElem = document.createElement("span");
     idElem.classList.add("task-id")
     idElem.innerHTML = "(" + id + ")";
-    this.rootElem.appendChild(idElem);
+    taskDetailElem.appendChild(idElem);
     
     this.statusElem = document.createElement("span");
     this.statusElem.classList.add("task-status");
