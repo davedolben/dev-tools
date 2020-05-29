@@ -4,5 +4,6 @@
 # Prints a pretty graph of the git commit history starting at HEAD (or the branches/commits given as args).
 #
 
-git log --graph --abbrev-commit --decorate --format=oneline "$@"
+#git log --graph --abbrev-commit --decorate --format=oneline "$@"
+git log --graph --format="%C(auto,yellow)%h%Creset %C(auto,green)%an%Creset %s %C(auto)%d%Creset" "$@"
 
