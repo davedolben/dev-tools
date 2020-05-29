@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+#
+# Updates remote refs, prunes them, then prompts the user whether they want to delete local tracking
+# branches that correspond to deleted remotes.
+#
+
+# Update remotes
+git fetch -p
+# Prune remote refs
+git remote prune origin
+# Print out tracking branches whose remote refs are gone
+branches=$(git branch -vv | grep 'origin/.*: gone]' | awk '{print $1}')
+
+echo ""
+echo "Found branches with deleted remote refs:"
+echo "$branches"
+echo ""
+
+read -p "Delete them? [N/y] " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  printf "%s" "$branches" | xargs git branch -D
+fi
+
