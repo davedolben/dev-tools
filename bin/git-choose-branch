@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Read all git branches into an array
+readarray -t branches < <(git branch | cut -c 3-)
+
+# Prompt user to select one from the list
+branch=
+select opt in "${branches[@]}"
+do
+  branch="$opt"
+  break
+done
+
+if [ -z "$branch" ]; then
+  echo "Please choose a branch"
+  exit 1
+fi
+
+git checkout "$branch"
+

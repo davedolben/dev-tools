@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Check if there's already a remote
+remote="$(git rev-parse --abbrev-ref @{u} 2>/dev/null)"
+if [ ! -z "$remote" ]; then
+  echo "Remote already exists: $remote"
+  exit 1
+fi
+
+# Get the name of the current branch
+branch_name="$(git rev-parse --abbrev-ref HEAD)"
+
+# Create an upstream
+git push -u origin "$branch_name"
+
