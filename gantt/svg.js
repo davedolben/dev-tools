@@ -130,6 +130,28 @@ function transformTasks(tasks) {
   return newTasks;
 }
 
+// Adds 'numDays' weekdays to 'start'.
+function addWeekdays(start, numDays) {
+  // Make a copy so we don't modify 'start'.
+  let endDate = new Date(start.getTime());
+
+  // Loop through all dates and don't count weekend days.
+  let daysCounted = 0;
+  while (true) {
+    // Check if it's a weekday. 0 == Sunday, 6 == Saturday
+    if (0 < endDate.getDay() && endDate.getDay() < 6) {
+      daysCounted++;
+    }
+    if (daysCounted >= numDays) {
+      break;
+    }
+    // Increment the date after the break so we don't add an extra day at the end.
+    endDate.setDate(endDate.getDate() + 1);
+  }
+
+  return endDate;
+}
+
 function tasksCsvToObjects(taskCsv) {
   let result = [];
   
@@ -137,7 +159,11 @@ function tasksCsvToObjects(taskCsv) {
     let newTask = {};
     newTask.task = taskCsv[i].task;
     newTask.start = new Date(taskCsv[i].start);
-    newTask.end = new Date(taskCsv[i].end);
+    if (taskCsv[i].end && taskCsv[i].end !== "") {
+      newTask.end = new Date(taskCsv[i].end);
+    } else if (taskCsv[i].length) {
+      newTask.end = addWeekdays(newTask.start, taskCsv[i].length);
+    }
     result.push(newTask);
   }
 
