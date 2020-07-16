@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+ancestor=`git merge-base HEAD master`
+ahead_of_master=`git rev-list --count ${ancestor}..HEAD`
+behind_master=`git rev-list --count ${ancestor}..master`
+
+echo "Current HEAD is ${ahead_of_master} commits ahead of and ${behind_master} commits behind master"
+
