@@ -120,8 +120,8 @@ function updateCalendar(data) {
 function transformTasks(tasks) {
   let newTasks = [];
   for (let i = 0; i < tasks.length; i++) {
-    let newTask = {};
-    newTask.task = tasks[i].task;
+    let newTask = Object.assign({}, tasks[i]);
+    //newTask.task = tasks[i].task;
     newTask.start = msToDays(tasks[i].start - calendarData.start);
     // Add 1 so it extends through the last day.
     newTask.end = msToDays(tasks[i].end - calendarData.start) + 1;
@@ -156,8 +156,8 @@ function tasksCsvToObjects(taskCsv) {
   let result = [];
   
   for (let i = 0; i < taskCsv.length; i++) {
-    let newTask = {};
-    newTask.task = taskCsv[i].task;
+    let newTask = Object.assign({}, taskCsv[i]);
+    //newTask.task = taskCsv[i].task;
     newTask.start = new Date(taskCsv[i].start);
     if (taskCsv[i].end && taskCsv[i].end !== "") {
       newTask.end = new Date(taskCsv[i].end);
@@ -193,7 +193,12 @@ function updateTasks(tasksData) {
       width: (d) => {
         return dayWidth * (d.end - d.start);
       },
-      fill: "#ccf"
+      fill: (d) => {
+        if (d.status && d.status === "Done") {
+          return "#cfcfcf";
+        }
+        return "#ccf";
+      },
     });
   tasksDisplay.enter().append("text")
     .attrs({
