@@ -70,7 +70,7 @@ function updateCalendar(data) {
       return d3.line()([[x, 0], [x, height]]);
     })
     .attr("fill", "none")
-    .attr("stroke", "gray")
+    .attr("stroke", "#ddd")
     .attr("stroke-width", "0.5");
   dayLinesUpdate.exit().remove();
 
@@ -91,7 +91,7 @@ function updateCalendar(data) {
       y: 0,
       width: dayWidth,
       height: height,
-      fill: "#ddd"
+      fill: "#f5f5f5"
     });
   weekendsUpdate.exit().remove();
 
