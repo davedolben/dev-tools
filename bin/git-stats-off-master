@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+ref="HEAD"
+
+VERBOSE=
+if [ "$1" = "-v" ]; then
+  VERBOSE=true
+  shift
+fi
+
+if [ "$#" -eq "1" ]; then
+  ref="$1"
+fi
+
+against="master"
+ancestor=`git merge-base ${ref} ${against}`
+ahead_of_master=`git rev-list --count ${ancestor}..${ref}`
+behind_master=`git rev-list --count ${ancestor}..${against}`
+
+echo "${ref} is ${ahead_of_master} commits ahead of and ${behind_master} commits behind ${against}"
+
+if [ ! -z "$VERBOSE" ]; then
+  echo ""
+  echo "New commits on ${ref} are:"
+  git log --oneline --ancestry-path ${ancestor}..${ref}
+fi
+
