@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne "1" ]; then
+  echo "Missing PID argument"
+  exit 1
+fi
+
+echo "Waiting for PID $1 to finish"
+
+# Blocks for the target PID to complete
+tail --pid $1 -f /dev/null
