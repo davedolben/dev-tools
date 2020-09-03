@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ "$#" -ne "1" ]; then
+  echo "Please provide a branch to squash"
+  exit 1
+fi
+
+branch="$1"
+current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+git merge --squash "$branch"
+git commit -m "[SQUASH] squash merged branch ${branch} into ${current_branch}"
+
