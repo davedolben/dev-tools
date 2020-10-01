@@ -31,10 +31,13 @@ var listTemplateString = `
 <div>
   <a href="/">Home</a> |
   <a href="/bookmarks">Bookmarks</a> |
-  <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Enqueue</a>
+  <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Enqueue</a> |
+  <span>
+    <a href="javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'&tag=suspended&auto_submit'; } suspend();">Suspend</a> (auto-submit)
+  </span>
 </div>
 <hr />
-<form action="/api/bookmarks/add" method="POST">
+<form id="add-form" action="/api/bookmarks/add" method="POST">
   <div class="flex-rows-container app-width">
     <div class="flex-cols-container bottom-padded">
       <span class="label padded-input">Title:</span>
@@ -90,6 +93,13 @@ var listTemplateString = `
 </div>
 </div>
 <div class="flex-fill"></div>
+
+{{ if .AutoSubmit }}
+<script type="text/javascript">
+// Auto-submit the form
+document.querySelector("#add-form").submit();
+</script>
+{{ end }}
 </body>
 </html>
 `
@@ -128,6 +138,7 @@ func serveList(w http.ResponseWriter, r *http.Request) {
   if len(currentTags) > 0 {
     redirect += "?tag=" + strings.Join(r.URL.Query()["tag"], "&tag=")
   }
+  autoSubmit := len(r.URL.Query()["auto_submit"]) > 0
 
   data := struct {
     Bookmarks []data.Note
@@ -135,12 +146,14 @@ func serveList(w http.ResponseWriter, r *http.Request) {
     FillURL string
     FillTags []string
     Redirect string
+    AutoSubmit bool
   }{
     Bookmarks: sortedNotes,
     FillTitle: r.FormValue("fill_title"),
     FillURL: r.FormValue("fill_url"),
     FillTags: fillTags,
     Redirect: redirect,
+    AutoSubmit: autoSubmit,
   }
 
   if err := listTemplate.Execute(w, &data); err != nil {
