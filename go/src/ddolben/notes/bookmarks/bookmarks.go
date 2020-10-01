@@ -33,7 +33,7 @@ var listTemplateString = `
   <a href="/bookmarks">Bookmarks</a> |
   <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Enqueue</a> |
   <span>
-    <a href="javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'&tag=suspended&auto_submit'; } suspend();">Suspend</a> (auto-submit)
+    <a href="javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'&fill_tags=suspended&auto_submit'; } suspend();">Suspend</a> (auto-submit)
   </span>
 </div>
 <hr />
