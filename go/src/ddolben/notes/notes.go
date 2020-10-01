@@ -1,10 +1,12 @@
 package main
 
 import (
+  "flag"
   "fmt"
   "html/template"
   "net/http"
   "net/url"
+  "path"
   "regexp"
   "strconv"
   "strings"
@@ -333,8 +335,11 @@ func serveEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+  fDataRoot := flag.String("data_root", ".", "Root directory for data")
+  flag.Parse()
+
   var err error
-  gDb, err = data.NewTextDatabase("notes.json")
+  gDb, err = data.NewTextDatabase(path.Join(*fDataRoot, "notes.json"))
   if err != nil {
     panic(err)
   }
@@ -342,7 +347,7 @@ func main() {
   setupTemplates()
 
   mux := http.NewServeMux()
-  bookmarks.RegisterHandlers(mux)
+  bookmarks.RegisterHandlers(mux, *fDataRoot)
 
   mux.HandleFunc("/api/add", handleAddNote)
   mux.HandleFunc("/api/delete", handleDeleteNote)

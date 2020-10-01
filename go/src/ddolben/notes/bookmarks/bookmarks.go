@@ -5,6 +5,7 @@ import (
   "html/template"
   "net/http"
   "net/url"
+  "path"
   "regexp"
   "strconv"
   "strings"
@@ -62,7 +63,7 @@ var listTemplateString = `
       <div>
         ({{.ID}})
         {{formatTime .Created}}
-        <a class="button" href="/api/bookmarks/delete?id={{.ID}}">X</a>
+        <a class="button" href="/api/bookmarks/delete?id={{.ID}}&redirect={{$.Redirect}}">X</a>
       </div>
     </span>
     <span>
@@ -122,16 +123,24 @@ func serveList(w http.ResponseWriter, r *http.Request) {
   r.ParseForm()
   fillTags := r.Form["fill_tags"]
 
+  redirect := "/bookmarks"
+  currentTags := r.URL.Query()["tag"]
+  if len(currentTags) > 0 {
+    redirect += "?tag=" + strings.Join(r.URL.Query()["tag"], "&tag=")
+  }
+
   data := struct {
     Bookmarks []data.Note
     FillTitle string
     FillURL string
     FillTags []string
+    Redirect string
   }{
     Bookmarks: sortedNotes,
     FillTitle: r.FormValue("fill_title"),
     FillURL: r.FormValue("fill_url"),
     FillTags: fillTags,
+    Redirect: redirect,
   }
 
   if err := listTemplate.Execute(w, &data); err != nil {
@@ -166,6 +175,8 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
+  redirect := r.FormValue("redirect")
+
   idStr := r.FormValue("id")
   id, err := strconv.ParseInt(idStr, 10, 64)
   if err != nil {
@@ -184,12 +195,12 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
     http.Error(w, err.Error(), 500)
     return
   }
-  http.Redirect(w, r, "/bookmarks", http.StatusFound)
+  http.Redirect(w, r, redirect, http.StatusFound)
 }
 
-func initDatabase() {
+func initDatabase(root string) {
   var err error
-  gDb, err = data.NewTextDatabase("bookmarks.json")
+  gDb, err = data.NewTextDatabase(path.Join(root, "bookmarks.json"))
   if err != nil {
     panic(err)
   }
@@ -210,8 +221,8 @@ func setupTemplates() {
   listTemplate = template.Must(template.New("list").Funcs(tmplFuncs).Parse(listTemplateString))
 }
 
-func RegisterHandlers(server *http.ServeMux) {
-  initDatabase()
+func RegisterHandlers(server *http.ServeMux, dataRoot string) {
+  initDatabase(dataRoot)
   setupTemplates()
 
   server.HandleFunc("/api/bookmarks/add", handleAdd)
