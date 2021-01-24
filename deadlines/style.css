@@ -1,7 +1,0 @@
-.deadlines-table {
-  border-collapse: collapse;
-}
-.deadlines-table td, th {
-  border: solid 1px black;
-  padding: 3px 5px;
-}
