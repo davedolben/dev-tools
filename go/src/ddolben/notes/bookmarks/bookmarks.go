@@ -53,11 +53,60 @@ var listTemplateString = `
     </div>
     <div class="flex-cols-container bottom-padded">
       <span class="label padded-input">Tags:</span>
-      <input class="flex-fill padded-input" name="tags" type="text" value="{{joinStrings .FillTags ", "}}"/>
+      <input id="tags-input" class="flex-fill padded-input" name="tags" type="text" value="{{joinStrings .FillTags ", "}}"/>
     </div>
-    <div class="flex-cols-container"><span class="flex-fill"></span><button type="submit">Save</button></div>
+    <div class="flex-cols-container">
+      <span>
+        Helpers: 
+        <a href="#" id="send-shortcut-link">Bookmark</a> |
+        <a href="#" id="view-shortcut-link">View List</a>
+      </span>
+      <span class="flex-fill"></span>
+      <span>
+        <button type="submit">Save</button>
+      </span>
+    </div>
   </div>
 </form>
+
+<script type="text/javascript">
+// Mini script to update the shortcut link as the user adds new tags.
+(function() {
+  let tags_input = document.querySelector("#tags-input");
+  let send_link = document.querySelector("#send-shortcut-link");
+  let view_link = document.querySelector("#view-shortcut-link");
+
+  let on_update = (e) => {
+    let tags = tags_input.value.split(',');
+    for (let i = 0; i < tags.length; i++) {
+      tags[i] = tags[i].trim();
+    }
+    let tags_string = tags.join(', ');
+
+    let send_url_tags = "";
+    let view_url_tags = "";
+    for (let i = 0; i < tags.length; i++) {
+      tags[i] = tags[i].trim();
+      send_url_tags += "&fill_tags=" + tags[i];
+      view_url_tags += "&tag=" + tags[i];
+    }
+
+    let new_send_link = "javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "&auto_submit'; } suspend();";
+    let new_view_link = "/bookmarks?" + view_url_tags;
+
+    send_link.href = new_send_link;
+    send_link.title = "Tags: " + tags_string + " (Autosubmit}";
+    send_link.innerHTML = "Bookmark (" + tags_string + ")";
+    view_link.href = new_view_link;
+    view_link.title = "Tags: " + tags_string;
+    view_link.innerHTML = "View List (" + tags_string + ")";
+  };
+
+  tags_input.onchange = on_update;
+  tags_input.onkeyup = on_update;
+})();
+</script>
+
 <hr />
 <div>
 {{range .Bookmarks}}
