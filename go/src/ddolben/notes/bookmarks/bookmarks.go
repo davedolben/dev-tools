@@ -91,7 +91,8 @@ var listTemplateString = `
       view_url_tags += "&tag=" + tags[i];
     }
 
-    let new_send_link = "javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "&auto_submit'; } suspend();";
+    let link_root = document.location.origin;
+    let new_send_link = "javascript: function suspend() { var d=document,l=d.location; d.location='"+link_root+"/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "&auto_submit'; } suspend();";
     let new_view_link = "/bookmarks?" + view_url_tags;
 
     send_link.href = new_send_link;
