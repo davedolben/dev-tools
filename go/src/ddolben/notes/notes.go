@@ -335,7 +335,9 @@ func serveEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-  fDataRoot := flag.String("data_root", ".", "Root directory for data")
+  fHost := flag.String("host", "localhost", "host to serve on")
+  fPort := flag.Int("port", 8080, "port to serve on")
+  fDataRoot := flag.String("data_root", ".", "root directory for data")
   flag.Parse()
 
   var err error
@@ -358,7 +360,8 @@ func main() {
 
   http.Handle("/", mux)
 
-  fmt.Printf("Serving on :8080\n")
-  http.ListenAndServe(":8080", nil)
+  host := fmt.Sprintf("%s:%d", *fHost, *fPort)
+  fmt.Printf("Serving on %s\n", host)
+  http.ListenAndServe(host, nil)
 }
 

@@ -31,7 +31,7 @@ var listTemplateString = `
 <div>
   <a href="/">Home</a> |
   <a href="/bookmarks">Bookmarks</a> |
-  <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Enqueue</a> |
+  <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Add Bookmark</a> |
   <span>
     <a href="javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'&fill_tags=suspended&auto_submit'; } suspend();">Suspend</a> (auto-submit)
   </span>
@@ -58,7 +58,7 @@ var listTemplateString = `
     <div class="flex-cols-container">
       <span>
         Helpers: 
-        <a href="#" id="send-shortcut-link">Bookmark</a> |
+        <a href="#" id="send-shortcut-link">Bookmark</a> (auto) |
         <a href="#" id="view-shortcut-link">View List</a>
       </span>
       <span class="flex-fill"></span>
