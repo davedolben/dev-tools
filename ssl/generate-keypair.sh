@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-certfile=Certificate.crt
-keyfile=Key.key
+out_dir=generated
+mkdir -p "$out_dir"
+certfile="${out_dir}/Certificate.crt"
+keyfile="${out_dir}/Key.key"
 
 # -nodes --> no passphrase
 openssl req -new \

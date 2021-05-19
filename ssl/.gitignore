@@ -1,2 +1,4 @@
 *.crt
 *.key
+v3.ext
+generated/
