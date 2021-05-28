@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne "1" ]; then
+  echo "please specify a branch name"
+  exit 1
+fi
+
+branch="$1"
+head="$(git rev-parse HEAD)"
+merge_base="$(git merge-base "$branch" "$head")"
+
+cmd="git cherry-pick ${merge_base}..${branch}"
+echo "> ${cmd}"
+${cmd}
+
