@@ -54,7 +54,11 @@ void RunAndMonitorChildProcess(char* const* args, const ChildProcessConfig* conf
     FILE* outfile = fopen(outfilename, "w");
     FILE* errfile = fopen(errfilename, "w");
 
+    char time_buf[1024];
+    timeString(time_buf, sizeof(time_buf));
+    fprintf(outfile, "[%s] ===== Starting child =====\n", time_buf);
     printf("===== Starting child =====\n");
+
     // Read from child
     // TODO: figure out how to read in parallel from stderr
     char buf[101];
@@ -67,16 +71,21 @@ void RunAndMonitorChildProcess(char* const* args, const ChildProcessConfig* conf
       buf[n] = '\0';
       printf("%s", buf);
       fprintf(outfile, "%s", buf);
+
+      // Force the buffer to write
+      fflush(outfile);
     }
 
     // Wait for the child process to die
     wait(NULL);
 
+    timeString(time_buf, sizeof(time_buf));
+    fprintf(outfile, "[%s] ===== Ending child =====\n", time_buf);
+    printf("===== Starting child =====\n");
+
     close(ctop_pipe[0]);
     fclose(outfile);
     fclose(errfile);
-
-    printf("===== Ending child =====\n");
   } else {
     // Child process
 
