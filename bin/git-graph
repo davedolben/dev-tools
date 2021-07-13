@@ -13,6 +13,9 @@ while [ "$#" -ge "1" ]; do
       format_extras="${format_extras} %C(auto,blue)%cd%Creset"
       shift
       ;;
+    *)
+      break
+      ;;
   esac
 done
 
