@@ -5,5 +5,16 @@
 #
 
 #git log --graph --abbrev-commit --decorate --format=oneline "$@"
-git log --graph --format="%C(auto,yellow)%h%Creset %C(auto,green)%an%Creset %s %C(auto)%d%Creset" "$@"
+format_extras=""
+
+while [ "$#" -ge "1" ]; do
+  case "$1" in
+    "--dates")
+      format_extras="${format_extras} %C(auto,blue)%cd%Creset"
+      shift
+      ;;
+  esac
+done
+
+git log --graph --format="%C(auto,yellow)%h%Creset %C(auto,green)%an%Creset${format_extras} %s %C(auto)%d%Creset" "$@"
 
