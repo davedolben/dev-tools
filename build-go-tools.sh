@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
 script_dir="$(cd $(dirname "$0") && pwd)"
-cd "$script_dir"
+bin_dir="${script_dir}/go-bin"
 
-export GOPATH=$GOPATH:${script_dir}/go/
+mkdir -p "$bin_dir"
 
-mkdir -p go/bin
+cd "${script_dir}/go"
 
-go build -o go/bin/fileserver ddolben/dev-tools/fileserver
-go build -o go/bin/babysitter ddolben/dev-tools/babysitter
-go build -o go/bin/notes-server ddolben/notes
+function build() {
+  pushd "$1"
+  go build -o "${bin_dir}/$2"
+  popd
+}
+
+build fileserver fileserver
+build babysitter babysitter
+build notes notes-server
 
