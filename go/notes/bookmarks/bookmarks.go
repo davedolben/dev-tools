@@ -30,11 +30,7 @@ var listTemplateString = `
 <div class="app-width flex-max-width">
 <div>
   <a href="/">Home</a> |
-  <a href="/bookmarks">Bookmarks</a> |
-  <a href="javascript: function archive() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title); } archive();">Add Bookmark</a> |
-  <span>
-    <a href="javascript: function suspend() { var d=document,l=d.location; d.location='http://localhost:8080/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'&fill_tags=suspended&auto_submit'; } suspend();">Suspend</a> (auto-submit)
-  </span>
+  <a href="/bookmarks">Bookmarks</a>
 </div>
 <hr />
 <form id="add-form" action="/api/bookmarks/add" method="POST">
@@ -58,8 +54,9 @@ var listTemplateString = `
     <div class="flex-cols-container">
       <span>
         Helpers: 
-        <a href="#" id="send-shortcut-link">Bookmark</a> (auto) |
-        <a href="#" id="view-shortcut-link">View List</a>
+        <a href="" id="send-shortcut-link-auto">Bookmark</a> (auto) |
+        <a href="" id="send-shortcut-link-manual">Add</a> |
+        <a href="" id="view-shortcut-link">List</a>
       </span>
       <span class="flex-fill"></span>
       <span>
@@ -73,10 +70,11 @@ var listTemplateString = `
 // Mini script to update the shortcut link as the user adds new tags.
 (function() {
   let tags_input = document.querySelector("#tags-input");
-  let send_link = document.querySelector("#send-shortcut-link");
+  let send_link_auto = document.querySelector("#send-shortcut-link-auto");
+  let send_link_manual = document.querySelector("#send-shortcut-link-manual");
   let view_link = document.querySelector("#view-shortcut-link");
 
-  let on_update = (e) => {
+  let on_update = () => {
     let tags = tags_input.value.split(',');
     for (let i = 0; i < tags.length; i++) {
       tags[i] = tags[i].trim();
@@ -92,16 +90,33 @@ var listTemplateString = `
     }
 
     let link_root = document.location.origin;
-    let new_send_link = "javascript: function suspend() { var d=document,l=d.location; d.location='"+link_root+"/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "&auto_submit'; } suspend();";
-    let new_view_link = "/bookmarks?" + view_url_tags;
 
-    send_link.href = new_send_link;
-    send_link.title = "Tags: " + tags_string + " (Autosubmit}";
-    send_link.innerHTML = "Bookmark (" + tags_string + ")";
+    let new_send_link_auto = "javascript: function bookmark() { var d=document,l=d.location; d.location='"+link_root+"/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "&auto_submit'; } bookmark();";
+    send_link_auto.href = new_send_link_auto;
+    send_link_auto.title = "Tags: " + tags_string + " (Autosubmit)";
+    send_link_auto.innerHTML = "Bookmark";
+    if (tags_string) {
+      send_link_auto.innerHTML += " (" + tags_string + ")";
+    }
+
+    let new_send_link_manual = "javascript: function bookmark() { var d=document,l=d.location; d.location='"+link_root+"/bookmarks?fill_url='+encodeURIComponent(l.href)+'&fill_title='+encodeURIComponent(d.title)+'" + send_url_tags + "'; } bookmark();";
+    send_link_manual.href = new_send_link_manual;
+    send_link_manual.title = "Tags: " + tags_string;
+    send_link_manual.innerHTML = "Save";
+    if (tags_string) {
+      send_link_manual.innerHTML += " (" + tags_string + ")";
+    }
+
+    let new_view_link = "/bookmarks?" + view_url_tags;
     view_link.href = new_view_link;
     view_link.title = "Tags: " + tags_string;
-    view_link.innerHTML = "View List (" + tags_string + ")";
+    view_link.innerHTML = "View List";
+    if (tags_string) {
+      view_link.innerHTML += " (" + tags_string + ")";
+    }
   };
+
+  on_update();
 
   tags_input.onchange = on_update;
   tags_input.onkeyup = on_update;
