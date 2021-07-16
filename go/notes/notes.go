@@ -78,11 +78,24 @@ var styleSheetString = `
   text-decoration: underline;
 }
 .hover-controls {
-  position: absolute;
   visibility: hidden;
-  bottom: 2px;
-  right: 3px;
   background: white;
+  padding: 3px 5px;
+
+  /* Position the control box outside the bottom right of the note. */
+  position: absolute;
+  top: 100%;
+  right: 10px;
+
+  /* Set up a border to make the control box look like a bottom tab. */
+  border-bottom: solid 1px #ccc;
+  border-left: solid 1px #ccc;
+  border-right: solid 1px #ccc;
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+
+  /* Make the tab float above other normal-priority elements on the page. */
+  z-index: 1;
 }
 .note:hover > .hover-controls {
   visibility: visible;
