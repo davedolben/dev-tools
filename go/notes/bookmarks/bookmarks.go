@@ -139,9 +139,9 @@ var listTemplateString = `
         <span class="note-title">
           {{if .URL}}
             {{if .Title}}
-              <a href="{{.URL}}">{{.Title}}</a>
+              <a target="_blank" rel="noreferrer noopener" href="{{.URL}}">{{.Title}}</a>
             {{else}}
-              <a href="{{.URL}}">{{.URL}}</a>
+              <a target="_blank" rel="noreferrer noopener" href="{{.URL}}">{{.URL}}</a>
             {{end}}
           {{else}}
             <span>{{.Title}}</span>
