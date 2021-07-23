@@ -61,6 +61,7 @@ func handleSignal(router *MessageRouter) http.HandlerFunc {
 }
 
 func main() {
+  fHost := flag.String("host", "", "HTTP host")
   fPort := flag.Int("port", 8888, "HTTP port")
   fStaticDir := flag.String("static_dir", "www", "Directory with static files")
   fUseSSL := flag.Bool("use_ssl", false, "If true, starts server over SSL. Requires ssl_cert and ssl_key args")
@@ -76,7 +77,7 @@ func main() {
   http.HandleFunc("/api/babysitter/signal", handleSignal(router))
   http.Handle("/", http.FileServer(http.Dir(*fStaticDir)))
 
-  host := fmt.Sprintf(":%d", *fPort)
+  host := fmt.Sprintf("%s:%d", *fHost, *fPort)
   log.Printf("serving on %s", host)
   if *fUseSSL {
     log.Printf("using SSL")
