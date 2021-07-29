@@ -7,7 +7,7 @@ mkdir -p "$bin_dir"
 
 cd "${script_dir}/go"
 
-function build() {
+build() {
   cd "$1"
   go build -o "${bin_dir}/$2"
   cd -
