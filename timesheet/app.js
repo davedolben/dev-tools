@@ -22,11 +22,15 @@ function handleData(data) {
   let buckets = getTimeBuckets(data);
   console.log(buckets);
 
-  let table = d3.select("#container").append("div").append("table");
-  let tr = table.selectAll("tr").data(data).enter().append("tr");
-  let td = tr.selectAll("td").data((d) => {
-    return [d["What"], d["Date"], d["In"], d["Out"]];
-  }).enter().append("td").text((d) => d);
+  // Build a punchcard
+  buildPunchcard("#container", buckets);
+
+  // Dump data onto the page
+  //let table = d3.select("#container").append("div").append("table");
+  //let tr = table.selectAll("tr").data(data).enter().append("tr");
+  //let td = tr.selectAll("td").data((d) => {
+  //  return [d["What"], d["Date"], d["In"], d["Out"]];
+  //}).enter().append("td").text((d) => d);
 }
 
 function getTimeBuckets(data) {
@@ -77,6 +81,59 @@ function getTimeBuckets(data) {
   }
 
   return bucketed;
+}
+
+// https://www.d3-graph-gallery.com/graph/bubble_template.html
+function buildPunchcard(selector, data) {
+  let margin = { left: 50, bottom: 50, right: 50, top: 50 };
+  let width = 500;
+  let height = 400;
+  let svg = d3.select(selector)
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.bottom + margin.top)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  // TODO: get from data
+  let numBuckets = 24;
+
+  let maxBucketValue = data.reduce((a, v) => Math.max(a, ...v), 0);
+  console.log(maxBucketValue);
+
+  // Create scales
+  let x = d3.scaleLinear()
+    .domain([-1, numBuckets])
+    .range([0, width]);
+  let y = d3.scaleLinear()
+    .domain([-1, 7])
+    .range([height, 0]);
+  let r = d3.scaleLinear()
+    .domain([0, maxBucketValue])
+    .range([1, 20]);
+
+  // Add axes
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+  svg.append("g")
+    .call(d3.axisLeft(y).ticks(8));
+
+  // Add bubbles
+  svg.append("g")
+    .selectAll(".punchcard-day")
+    .data(data)
+    .enter()
+    .append("g")
+      .attr("transform", (d, i) => "translate(0," + y(i) + ")")
+    .selectAll(".punchcard-bucket")
+    .data((d) => d)
+    .enter()
+    .append("circle")
+      .attr("cx", (d, i) => x(i))
+      .attr("cy", 0)
+      .attr("r", (d) => r(d))
+      .style("fill", (d) => "#000000");
 }
 
 
