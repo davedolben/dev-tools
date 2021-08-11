@@ -11,6 +11,10 @@ if (cached_url) {
   url_input.value = cached_url;
 }
 
+let now = DateTime.now();
+document.querySelector("#input-date-end").value = now.toFormat("yyyy-MM-dd");
+document.querySelector("#input-time-end").value = now.toLocaleString(DateTime.TIME_24_SIMPLE);
+
 function fetchData() {
   let url_input = document.querySelector("#input-sheet-url");
   let url = url_input.value;
@@ -23,8 +27,55 @@ function fetchData() {
   window.localStorage.setItem("sheet-url", url);
 }
 
+function getRowTime(date, time) {
+  let startDate = DateTime.fromFormat(date, "yyyy-MM-dd");
+  if (!startDate.isValid) {
+    startDate = DateTime.fromFormat(date, "yyyy/MM/dd");
+  }
+  if (!startDate.isValid) {
+    startDate = DateTime.fromFormat(date, "M/d/yyyy");
+  }
+  if (!startDate.isValid) {
+    console.error("Failed to parse date ", date);
+    throw "Failed to parse date";
+  }
+
+  let startTime = DateTime.fromFormat(time, "hh:mm");
+  if (!startTime.isValid) {
+    startTime = DateTime.fromFormat(time, "h:mm:ss a");
+  }
+  if (!startTime.isValid) {
+    startTime = DateTime.fromFormat(time, "h:mm a");
+  }
+  if (!startTime.isValid) {
+    console.error("Failed to parse time ", time);
+    throw "Failed to parse time";
+  }
+  return startDate.plus({ hours: startTime.hour, minutes: startTime.minute, seconds: startTime.seconds });
+}
+
 function handleData(data) {
-  console.log(data);
+  console.log("Raw:", data);
+
+  let start = getRowTime(
+    document.querySelector("#input-date-start").value,
+    document.querySelector("#input-time-start").value);
+  let end = getRowTime(
+    document.querySelector("#input-date-end").value,
+    document.querySelector("#input-time-end").value);
+  let filter_interval = luxon.Interval.fromDateTimes(start, end);
+  data = data.filter(line => {
+    if (!line["In"] || !line["Out"]) {
+      return false;
+    }
+    let in_ts = getRowTime(line["Date"], line["In"]);
+    let out_ts = getRowTime(line["Date"], line["Out"]);
+    let row_interval = luxon.Interval.fromDateTimes(in_ts, out_ts);
+    console.log(line["Date"], line["In"], line["Out"], in_ts, out_ts, row_interval);
+    return filter_interval.overlaps(row_interval);
+  });
+
+  console.log("Filtered:", data);
 
   let buckets = getTimeBuckets(data);
   console.log(buckets);
