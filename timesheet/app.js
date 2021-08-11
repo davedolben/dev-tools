@@ -5,6 +5,12 @@ let DateTime = luxon.DateTime;
 let button = document.querySelector("#input-grab-data");
 button.onclick = fetchData;
 
+let cached_url = window.localStorage.getItem("sheet-url");
+if (cached_url) {
+  let url_input = document.querySelector("#input-sheet-url");
+  url_input.value = cached_url;
+}
+
 function fetchData() {
   let url_input = document.querySelector("#input-sheet-url");
   let url = url_input.value;
@@ -14,6 +20,7 @@ function fetchData() {
     .catch((err) => {
       console.error(err);
     });
+  window.localStorage.setItem("sheet-url", url);
 }
 
 function handleData(data) {
