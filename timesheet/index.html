@@ -8,8 +8,13 @@
 <body>
   <h1>Timesheet</h1>
   <div>
-    <span>Sheet URL:</span>
-    <input type="text" placeholder="Sheet URL" id="input-sheet-url" value="sample_data.csv" />
+    <div>
+      <span>Sheet URL:</span>
+      <input type="text" placeholder="Sheet URL" id="input-sheet-url" value="sample_data.csv" />
+    </div>
+    <div>
+      <button id="input-grab-data">Grab Data</button>
+    </div>
   </div>
   <div>
     <div>
@@ -22,10 +27,13 @@
       <input type="date" id="input-date-end" />
       <input type="time" id="input-time-end" />
     </div>
+    <div>
+      <button id="button-filter">Filter</button>
+    </div>
   </div>
-  <div>
-    <button id="input-grab-data">Grab Data</button>
-  </div>
+
+  <hr />
+
   <div id="container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/luxon@2.0.1/build/global/luxon.min.js"></script>

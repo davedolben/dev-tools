@@ -5,6 +5,9 @@ let DateTime = luxon.DateTime;
 let button = document.querySelector("#input-grab-data");
 button.onclick = fetchData;
 
+let filter_button = document.querySelector("#button-filter");
+filter_button.onclick = filterData;
+
 let cached_url = window.localStorage.getItem("sheet-url");
 if (cached_url) {
   let url_input = document.querySelector("#input-sheet-url");
@@ -15,12 +18,17 @@ let now = DateTime.now();
 document.querySelector("#input-date-end").value = now.toFormat("yyyy-MM-dd");
 document.querySelector("#input-time-end").value = now.toLocaleString(DateTime.TIME_24_SIMPLE);
 
+let data;
+
 function fetchData() {
   let url_input = document.querySelector("#input-sheet-url");
   let url = url_input.value;
   console.log("URL", url);
   d3.csv(url)
-    .then(handleData)
+    .then((response) => {
+      data = response;
+      handleData(data);
+    })
     .catch((err) => {
       console.error(err);
     });
@@ -52,6 +60,11 @@ function getRowTime(date, time) {
     throw "Failed to parse time";
   }
   return startDate.plus({ hours: startTime.hour, minutes: startTime.minute, seconds: startTime.seconds });
+}
+
+function filterData() {
+  document.querySelector("#container").innerHTML = "";
+  handleData(data);
 }
 
 function handleData(data) {
