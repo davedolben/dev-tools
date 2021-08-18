@@ -14,9 +14,31 @@ if (cached_url) {
   url_input.value = cached_url;
 }
 
-let now = DateTime.now();
-document.querySelector("#input-date-end").value = now.toFormat("yyyy-MM-dd");
-document.querySelector("#input-time-end").value = now.toLocaleString(DateTime.TIME_24_SIMPLE);
+let input_date_start = document.querySelector("#input-date-start");
+let input_date_end =   document.querySelector("#input-date-end");
+let input_time_start = document.querySelector("#input-time-start");
+let input_time_end =   document.querySelector("#input-time-end");
+
+function clearFilters() {
+  let now = DateTime.now();
+  input_date_start.value = "1999-12-31";
+  input_date_end.value = now.toFormat("yyyy-MM-dd");
+  input_time_start.value = "23:59";
+  input_time_end.value = now.toLocaleString(DateTime.TIME_24_SIMPLE);
+}
+clearFilters();
+
+document.querySelector("#button-clear-filters").onclick = clearFilters;
+
+document.querySelector("#button-this-week").onclick = () => {
+  let week_start = luxon.DateTime.now().startOf("week");
+  let week_end = luxon.DateTime.now().endOf("week");
+
+  input_date_start.value = week_start.toFormat("yyyy-MM-dd");
+  input_date_end.value = week_end.toFormat("yyyy-MM-dd");
+  input_time_start.value = week_start.toLocaleString(DateTime.TIME_24_SIMPLE);
+  input_time_end.value = week_end.toLocaleString(DateTime.TIME_24_SIMPLE);
+};
 
 let data;
 
