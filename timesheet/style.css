@@ -9,3 +9,6 @@ input[type="text"] {
   border: solid 1px black;
   padding: 3px 5px;
 }
+.bottom-margin {
+  margin-bottom: 5px;
+}

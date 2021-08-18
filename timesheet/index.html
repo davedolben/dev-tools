@@ -7,16 +7,13 @@
 
 <body>
   <h1>Timesheet</h1>
-  <div>
-    <div>
-      <span>Sheet URL:</span>
-      <input type="text" placeholder="Sheet URL" id="input-sheet-url" value="sample_data.csv" />
-    </div>
-    <div>
-      <button id="input-grab-data">Grab Data</button>
-    </div>
+  <div class="bottom-margin">
+    <span>Sheet URL:</span>
+    <input type="text" placeholder="Sheet URL" id="input-sheet-url" value="sample_data.csv" />
+    <button id="input-grab-data">Grab Data</button>
   </div>
-  <div class="box">
+
+  <div class="box bottom-margin">
     <div>Filters</div>
     <div>
       Start
@@ -36,8 +33,6 @@
       <button id="button-filter">Filter</button>
     </div>
   </div>
-
-  <hr />
 
   <div id="container"></div>
 
