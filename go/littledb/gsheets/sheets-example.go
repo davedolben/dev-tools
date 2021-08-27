@@ -10,6 +10,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "time"
 
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -82,6 +83,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, `<a href="/login">Login</a> <br/> <a href="/sheets">Sheets</a>`)
 }
 
+type TimeWindow struct {
+  What string `littledb:"What"`
+  Date time.Time `littledb:"Date"`
+  In time.Time `littledb:"In"`
+  Out time.Time `littledb:"Out"`
+}
+
 func sheetsHandler(w http.ResponseWriter, r *http.Request) {
   sheetId := r.FormValue("sheet")
 
@@ -102,14 +110,22 @@ func sheetsHandler(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  rsp, err := srv.Spreadsheets.Values.Get(sheetId, "Time Sheet!A1:E100").Do()
+  db, err := NewSheetsDB(srv, sheetId)
   if err != nil {
+    fmt.Fprintf(w, "error building client: %s", err.Error())
+    return
+  }
+
+  db.Register(TimeWindow{}, "Time Sheet!A1:E100")
+
+  rows := []TimeWindow{}
+  if err := db.Query(&rows); err != nil {
     fmt.Fprintf(w, "error querying spreadsheet: %s", err.Error())
     return
   }
 
-  for _, row := range rsp.Values {
-    log.Printf("%s", row)
+  for _, row := range rows {
+    log.Printf("%+v", row)
   }
 
   fmt.Fprintf(w, `Tried to do it!`)
