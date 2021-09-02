@@ -14,7 +14,7 @@ import (
   "github.com/davedolben/dev-tools/go/notes/data"
 )
 
-var tagsSplitRegex = regexp.MustCompile(`[\w-]+`)
+var tagsSplitRegex = regexp.MustCompile(`[\w-_:/]+`)
 
 var gDb data.NotesDatabase
 
