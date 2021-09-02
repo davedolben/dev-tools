@@ -86,10 +86,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type TimeWindow struct {
-  What string `littledb:"What"`
-  Date time.Time `littledb:"Date"`
-  In time.Time `littledb:"In"`
-  Out time.Time `littledb:"Out"`
+  What string `littledb:"What" json:"what"`
+  Date time.Time `littledb:"Date" json:"date"`
+  In time.Time `littledb:"In" json:"in"`
+  Out time.Time `littledb:"Out" json:"out"`
+}
+
+type Out struct {
+  TimeWindows []TimeWindow `json:"time_windows"`
 }
 
 func sheetsHandler(w http.ResponseWriter, r *http.Request) {
@@ -120,17 +124,23 @@ func sheetsHandler(w http.ResponseWriter, r *http.Request) {
 
   db.Register(TimeWindow{}, "Time Sheet!A1:E100")
 
-  rows := []TimeWindow{}
-  if err := db.Query(&rows); err != nil {
+  out := &Out{}
+  if err := db.Query(&out.TimeWindows); err != nil {
     fmt.Fprintf(w, "error querying spreadsheet: %s", err.Error())
     return
   }
 
-  for _, row := range rows {
+  for _, row := range out.TimeWindows {
     log.Printf("%+v", row)
   }
 
-  fmt.Fprintf(w, `Tried to do it!`)
+  bs, err := json.Marshal(out)
+  if err != nil {
+    fmt.Fprintf(w, "error marhsaling output: %s", err.Error())
+    return
+  }
+
+  fmt.Fprintf(w, `%s`, string(bs))
 }
 
 func getLoginURL(state string) string {
