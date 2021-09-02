@@ -12,7 +12,6 @@ import (
 
 type SheetsDB struct {
   srv *sheets.Service
-  // TODO: move to query
   sheetId string
   ranges map[reflect.Type]string
 }

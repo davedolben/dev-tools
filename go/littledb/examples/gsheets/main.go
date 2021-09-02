@@ -170,10 +170,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     router := mux.NewRouter()
-    //router.Use(sessions.Sessions("goquestsession", store))
-    //router.Static("/css", "./static/css")
-    //router.Static("/img", "./static/img")
-    //router.LoadHTMLGlob("templates/*")
 
     router.HandleFunc("/login", loginHandler)
     router.HandleFunc("/auth", authHandler)
