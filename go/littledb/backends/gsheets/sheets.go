@@ -8,12 +8,13 @@ import (
   "time"
 
   "google.golang.org/api/sheets/v4"
+
+  "github.com/davedolben/dev-tools/go/littledb"
 )
 
-type SheetsDB struct {
-  srv *sheets.Service
-  sheetId string
-  ranges map[reflect.Type]string
+type sheetsExecutor struct {
+  data interface{}
+  db *SheetsDB
 }
 
 type sheetColumn struct {
@@ -22,13 +23,8 @@ type sheetColumn struct {
   ColIndex int
 }
 
-func (db *SheetsDB) Register(t interface{}, dataRange string) *SheetsDB {
-  db.ranges[reflect.ValueOf(t).Type()] = dataRange
-  return db
-}
-
-func (db *SheetsDB) Query(data interface{}) error {
-  vPtr := reflect.ValueOf(data)
+func (ex *sheetsExecutor) Query(clauses *littledb.QueryClauses) error {
+  vPtr := reflect.ValueOf(ex.data)
   if vPtr.Kind() != reflect.Ptr {
     return errors.New("not a pointer")
   }
@@ -57,11 +53,11 @@ func (db *SheetsDB) Query(data interface{}) error {
     })
   }
 
-  dataRange, ok := db.ranges[tElem]
+  dataRange, ok := ex.db.ranges[tElem]
   if !ok {
     return fmt.Errorf("no spreadsheet range registered for type: %+v", tElem)
   }
-  rsp, err := db.srv.Spreadsheets.Values.Get(db.sheetId, dataRange).Do()
+  rsp, err := ex.db.srv.Spreadsheets.Values.Get(ex.db.sheetId, dataRange).Do()
   if err != nil {
     return err
   }
@@ -103,6 +99,26 @@ func (db *SheetsDB) Query(data interface{}) error {
   }
 
   return nil
+}
+
+type SheetsDB struct {
+  srv *sheets.Service
+  sheetId string
+  ranges map[reflect.Type]string
+}
+
+func (db *SheetsDB) Register(t interface{}, dataRange string) *SheetsDB {
+  db.ranges[reflect.ValueOf(t).Type()] = dataRange
+  return db
+}
+
+func (db *SheetsDB) Query(data interface{}) *littledb.PartialQuery {
+  return &littledb.PartialQuery{
+    Ex: &sheetsExecutor{
+      data: data,
+      db: db,
+    },
+  }
 }
 
 func NewSheetsDB(srv *sheets.Service, sheetId string) (*SheetsDB, error) {

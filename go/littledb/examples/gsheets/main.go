@@ -125,7 +125,7 @@ func sheetsHandler(w http.ResponseWriter, r *http.Request) {
   db.Register(TimeWindow{}, "Time Sheet!A1:E100")
 
   out := &Out{}
-  if err := db.Query(&out.TimeWindows); err != nil {
+  if err := db.Query(&out.TimeWindows).Do(); err != nil {
     fmt.Fprintf(w, "error querying spreadsheet: %s", err.Error())
     return
   }
