@@ -1,4 +1,4 @@
-package main
+package littledb
 
 type DB interface {
   // Query the table/sheet/etc. registered for a given type and populate the fields in the data structure.

@@ -2,22 +2,24 @@ package main
 
 import (
   "context"
-    "crypto/rand"
-    "encoding/base64"
-    "encoding/gob"
-    "encoding/json"
-    "io/ioutil"
-    "fmt"
-    "log"
-    "net/http"
-    "time"
+  "crypto/rand"
+  "encoding/base64"
+  "encoding/gob"
+  "encoding/json"
+  "io/ioutil"
+  "fmt"
+  "log"
+  "net/http"
+  "time"
 
-    "github.com/gorilla/mux"
-    "github.com/gorilla/sessions"
-    "golang.org/x/oauth2"
-    "golang.org/x/oauth2/google"
-    "google.golang.org/api/option"
-    "google.golang.org/api/sheets/v4"
+  "github.com/gorilla/mux"
+  "github.com/gorilla/sessions"
+  "golang.org/x/oauth2"
+  "golang.org/x/oauth2/google"
+  "google.golang.org/api/option"
+  "google.golang.org/api/sheets/v4"
+
+  "github.com/davedolben/dev-tools/go/littledb/backends/gsheets"
 )
 
 // Credentials which stores google ids.
@@ -110,7 +112,7 @@ func sheetsHandler(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  db, err := NewSheetsDB(srv, sheetId)
+  db, err := gsheets.NewSheetsDB(srv, sheetId)
   if err != nil {
     fmt.Fprintf(w, "error building client: %s", err.Error())
     return
