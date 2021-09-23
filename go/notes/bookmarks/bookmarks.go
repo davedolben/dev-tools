@@ -3,6 +3,7 @@ package bookmarks
 import (
   "fmt"
   "html/template"
+  "log"
   "net/http"
   "net/url"
   "path"
@@ -276,6 +277,31 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
   http.Redirect(w, r, redirect, http.StatusFound)
 }
 
+func serveGoLink(w http.ResponseWriter, r *http.Request) {
+  golink := strings.TrimPrefix(r.URL.Path, "/go/")
+
+  q := &data.NotesQuery{
+    Tags: []string{"golink"},
+  }
+
+  bookmarks, err := gDb.Query(q)
+  if err != nil {
+    fmt.Printf("Error finding links: %s\n", err)
+    http.Error(w, "Error finding links", 500)
+    return
+  }
+
+  for _, bookmark := range bookmarks {
+    if bookmark.Title == golink {
+      log.Printf("redirecting to golink %q: %s", golink, bookmark.URL)
+      http.Redirect(w, r, bookmark.URL, http.StatusFound)
+      return
+    }
+  }
+
+  fmt.Fprintf(w, "failed to find golink %q", golink)
+}
+
 func initDatabase(root string) {
   var err error
   gDb, err = data.NewTextDatabase(path.Join(root, "bookmarks.json"))
@@ -305,6 +331,8 @@ func RegisterHandlers(server *http.ServeMux, dataRoot string) {
 
   server.HandleFunc("/api/bookmarks/add", handleAdd)
   server.HandleFunc("/api/bookmarks/delete", handleDelete)
+  server.HandleFunc("/go/", serveGoLink)
+  server.HandleFunc("/go", serveGoLink)
   server.HandleFunc("/bookmarks", serveList)
 }
 
