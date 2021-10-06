@@ -5,6 +5,7 @@ import (
   "fmt"
   "log"
   "net/http"
+  "os"
   "strings"
 )
 
@@ -43,6 +44,14 @@ func (sv *MappedDirServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
   fDir := flag.String("dir", ".", "Directory to serve")
   fPort := flag.Int("port", 8080, "Port on which to serve")
+
+  flag.Usage = func() {
+    fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+    fmt.Fprintf(flag.CommandLine.Output(), "  custom path mappings can be specified on the command line:\n")
+    fmt.Fprintf(flag.CommandLine.Output(), "    <url_prefix>:<directory>\n\n")
+    flag.PrintDefaults()
+  }
+
   flag.Parse()
 
   var mappings []DirMapping
