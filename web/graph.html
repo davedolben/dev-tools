@@ -58,10 +58,19 @@ d3.csv(csvFile,
                   .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999']);
 
 
-              legend.selectAll("div").data(grouped)
-                .join("div")
-                  .style("color", d => color(d[0]))
-                  .text(d => d[0]);
+              // Populate the legend.
+              let legendEntry = legend.selectAll("div").data(grouped)
+                .join("div");
+              legendEntry.append("input")
+                .attr("type", "checkbox")
+                .attr("checked", "true")
+                .attr("id", (d, i) => {
+                  return "checkbox-" + i;
+                })
+                .on("change", redrawLines);
+              legendEntry.append("span")
+                .style("color", d => color(d[0]))
+                .text(d => d[0]);
 
                   // Add X axis --> it is a date format
                   const x = d3.scaleLinear()
@@ -129,6 +138,24 @@ d3.csv(csvFile,
                     .append("g")
                       .attr("class", "brush")
                       .call(brush);
+
+              function redrawLines() {
+                line.selectAll('.line')
+                  .transition()
+                  .duration(1000)
+                  .style("opacity", (d, i) => {
+                    if (d3.select("#checkbox-" + i).property("checked")) {
+                      return 1;
+                    }
+                    return 0;
+                  })
+                  .attr("d", (d) => {
+                    return d3.line()
+                        .x(function(d) { return x(d.date) })
+                        .y(function(d) { return y(d.value) })
+                        (d[1]);
+                  });
+              }
 
                   // A function that set idleTimeOut to null
                   let idleTimeout
