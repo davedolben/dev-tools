@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 
-ref="HEAD"
-
 VERBOSE=
-if [ "$1" = "-v" ]; then
-  VERBOSE=true
-  shift
-fi
+against="master"
+while [ "$#" -gt "0" ]; do
+  case "$1" in
+    "-v")
+      VERBOSE=true
+      shift
+      ;;
+    "--against")
+      against="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
+ref="HEAD"
 if [ "$#" -eq "1" ]; then
   ref="$1"
 fi
 
-against="master"
 ancestor=`git merge-base ${ref} ${against}`
 ahead_of_master=`git rev-list --count ${ancestor}..${ref}`
 behind_master=`git rev-list --count ${ancestor}..${against}`
