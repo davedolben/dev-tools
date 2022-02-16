@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "name": "test",
+      "command": ["echo", "hello world"]
+    },
+    {
+      "name": "whereami",
+      "command": ["pwd"]
+    }
+  ]
+}
