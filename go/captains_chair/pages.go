@@ -47,6 +47,18 @@ type pageAction struct {
   Name string
 }
 
+func serveError(errToPrint error, w http.ResponseWriter) {
+  bs, err := json.Marshal(struct {
+    Error string `json:"error"`
+  }{
+    Error: errToPrint.Error(),
+  })
+  if err != nil {
+    fmt.Fprintf(w, "%s", errToPrint.Error())
+  }
+  fmt.Fprintf(w, "%s", string(bs))
+}
+
 func serveIndex(pageActions []pageAction) http.HandlerFunc {
   return func(w http.ResponseWriter, r* http.Request) {
     data := struct {
@@ -56,7 +68,7 @@ func serveIndex(pageActions []pageAction) http.HandlerFunc {
     }
     err := indexTemplate.Execute(w, data)
     if err != nil {
-      fmt.Fprintf(w, "%s", err.Error())
+      serveError(err, w)
     }
   }
 }
@@ -65,7 +77,8 @@ func handleRunAction(conf *ConfigFile) http.HandlerFunc {
   return func(w http.ResponseWriter, r* http.Request) {
     out, err := doAction(r.FormValue("action"), conf)
     if err != nil {
-      fmt.Fprintf(w, "{\"error\": \"%s\"}", err.Error())
+      serveError(err, w)
+      return
     }
     bs, err := json.Marshal(struct {
       Output string `json:"output"`
@@ -73,7 +86,8 @@ func handleRunAction(conf *ConfigFile) http.HandlerFunc {
       Output: out,
     })
     if err != nil {
-      fmt.Fprintf(w, "{\"error\": \"%s\"}", err.Error())
+      serveError(err, w)
+      return
     }
     fmt.Fprintf(w, "%s", string(bs))
   }

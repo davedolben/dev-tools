@@ -6,7 +6,7 @@
     },
     {
       "name": "whereami",
-      "command": ["pwd"]
+      "command": ["pwddd"]
     }
   ]
 }
