@@ -11,6 +11,7 @@ var indexTemplate = template.Must(template.New("index").Parse(`
 <html>
 <head>
   <title>Captain's Chair</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style type="text/css">
     .button {
       border: solid 1px black;
