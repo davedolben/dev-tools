@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 
 script_dir="$(cd $(dirname "$0") && pwd)"
-bin_dir="${script_dir}/go-bin"
+bin_dir="${OUT_DIR:-go-bin}"
+bin_dir="${script_dir}/${bin_dir}"
 
 mkdir -p "$bin_dir"
 
@@ -16,4 +17,5 @@ build() {
 build fileserver fileserver
 build babysitter babysitter
 build notes notes-server
+build captains_chair captains-chair
 
