@@ -122,6 +122,7 @@ var listTemplateString = `
 <head>
   <title>My Notes</title>
   <link rel="stylesheet" type="text/css" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body class="flex-cols-container">
 <div class="flex-fill"></div>
