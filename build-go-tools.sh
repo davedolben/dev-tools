@@ -43,7 +43,7 @@ fi
 # Do this next to make sure it overrides the previous value
 if [ ! -z "$DO_ARM" ]; then
   echo "Cross-compiling for arm"
-  export GOARCH=amd64
+  export GOARCH=arm64
 fi
 
 if [ ! -z "$GOOS" ]; then
