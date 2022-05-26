@@ -1,0 +1,30 @@
+body {
+  font-family: sans-serif;
+}
+.big-text {
+  font-size: 200%;
+}
+.center {
+  margin: 0 auto;
+  max-width: 360px;
+  text-align: center;
+}
+.bottom-padded {
+  padding-bottom: 16px;
+}
+#drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 16px;
+  width: 480px;
+  padding: 24px;
+  min-height: 360px;
+  margin: 0 auto;
+}
+#drop-area.highlight {
+  background-color: #f0f0f0;
+  border-color: blue;
+  border-style: solid;
+}
+#progress-container {
+  width: 100%;
+}
