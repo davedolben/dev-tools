@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
 # Read all git branches into an array
-readarray -t branches < <(git branch | cut -c 3-)
+# Note 'readarray' isn't available on MacOS
+#readarray -t branches < <(git branch | cut -c 3-)
+branches=()
+while IFS= read branch; do
+  branches+=($branch)
+done < <(git branch | cut -c 3-)
 
 # Prompt user to select one from the list
 branch=
