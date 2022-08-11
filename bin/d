@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+# Walk up the directory tree from $1 to find $2
+# Returns the absolute path to the desired file, or the empty string if not found
+search_up() {
+  local start="$1"
+  local target="$2"
+  local look="${start%/}"
+  while [[ -n "$look" ]]; do
+    [[ -e "${look}/${target}" ]] && {
+      printf '%s' "$look/${target}"
+      return
+    }
+    look="${look%/*}"
+  done
+  [[ -e "/${target}" ]] && echo "/${target}"
+}
+
+check_for_script() {
+  local dir="$1"
+  local script="$2"
+  path="${dir}/${script}.sh"
+  ls "$path" > /dev/null 2>&1
+  if [ "$?" -eq "0" ]; then
+    echo "$path"
+  fi
+}
+
+if [ "$1" == "-v" ]; then
+  shift
+  verbose=true
+fi
+
+# Walk up the directory hierarchy looking for a .d or d file
+dfiles_dir="$(search_up "$PWD" dfiles)"
+
+if [ "$verbose" = true ]; then
+  echo "Using $dfiles_dir"
+fi
+
+command="$1"
+if [ -z "$command" ]; then
+  ls -1 "${dfiles_dir}"
+  exit 0
+fi
+
+full_path="$(check_for_script "${dfiles_dir}" ${command})"
+if [ -z "$full_path" ]; then
+  echo "command not found"
+  exit 1
+fi
+
+if [ "$verbose" = true ]; then
+  echo "Running: ${full_path}"
+fi
+
+${full_path}
+
