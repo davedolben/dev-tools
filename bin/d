@@ -39,6 +39,7 @@ if [ "$verbose" = true ]; then
 fi
 
 command="$1"
+shift
 if [ -z "$command" ]; then
   ls -1 "${dfiles_dir}"
   exit 0
@@ -51,8 +52,8 @@ if [ -z "$full_path" ]; then
 fi
 
 if [ "$verbose" = true ]; then
-  echo "Running: ${full_path}"
+  echo "Running: ${full_path} $@"
 fi
 
-${full_path}
+${full_path} "$@"
 
