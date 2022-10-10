@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# Run managed commands in the background via tmux
+
+set -e
+
+# TODO: check for tmux
+
+# config
+session=runningback
+
+function new_window() {
+  local started_if_z="$(tmux has-session -t "${session}" 2>&1)"
+  if [ -z "$started_if_z" ]; then
+    tmux new-window -t "${session}"
+  else
+    tmux new-session -d -s "${session}"
+  fi
+}
+
+if [ "$#" -eq "0" ]; then
+  echo "please provide a command"
+  exit 1
+fi
+
+cmd="$1"
+shift
+
+case "$cmd" in
+  "run"|"r")
+    new_window
+    tmux send-keys -t "${session}" "$*" Enter
+    (sleep 5 && tmux detach -s "${session}")&
+    tmux attach -t "${session}"
+    ;;
+  "attach"|"a")
+    tmux a -t runningback ';' choose-tree -f '#{==:#{session_name},runningback}'
+    ;;
+  "list"|"l")
+    tmux list-windows -f '#{==:#{session_name},runningback}'
+    ;;
+  *)
+    echo "unrecognized command: $cmd"
+    exit 1
+    ;;
+esac
+
