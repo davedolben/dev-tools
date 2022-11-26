@@ -1,4 +1,5 @@
 *.swp
 bookmarks.json
 notes.json
+blobs.json
 bin/

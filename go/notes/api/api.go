@@ -16,10 +16,19 @@ import (
 )
 
 var gDb data.NotesDatabase
+var gBlobStore data.BlobStore
 
 func InitDatabase(root string) {
   var err error
   gDb, err = data.NewTextDatabase(filepath.Join(root, "bookmarks.json"))
+  if err != nil {
+    panic(err)
+  }
+}
+
+func InitKVStore(root string) {
+  var err error
+  gBlobStore, err = data.NewFileBlobStore(filepath.Join(root, "blobs.json"))
   if err != nil {
     panic(err)
   }
@@ -157,6 +166,33 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "{}")
 }
 
+func handleGetBlob(w http.ResponseWriter, r *http.Request) {
+  id := chi.URLParam(r, "id")
+  data, err := gBlobStore.Get(id)
+  if err != nil {
+    http.Error(w, err.Error(), 500)
+    return
+  }
+  fmt.Fprintf(w, "%s", data)
+}
+
+func handleSetBlob(w http.ResponseWriter, r *http.Request) {
+  id := chi.URLParam(r, "id")
+
+  data, err := io.ReadAll(r.Body)
+  if err != nil {
+    http.Error(w, err.Error(), 500)
+    return
+  }
+
+  if err := gBlobStore.Set(id, string(data)); err != nil {
+    http.Error(w, err.Error(), 500)
+    return
+  }
+
+  fmt.Fprintf(w, "{ \"success\": true }")
+}
+
 func RegisterHandlers(s *http.ServeMux) {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -165,6 +201,9 @@ func RegisterHandlers(s *http.ServeMux) {
 	r.Put("/bookmarks/", handleAdd)
 	r.Post("/bookmarks/{id}", handleUpdate)
 	r.Delete("/bookmarks/{id}", handleDelete)
+
+	r.Get("/kv/{id}", handleGetBlob)
+	r.Post("/kv/{id}", handleSetBlob)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "{}")

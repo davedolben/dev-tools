@@ -1,20 +1,20 @@
 package main
 
 import (
-  "flag"
-  "fmt"
-  "html/template"
-  "net/http"
-  "net/url"
-  "path"
-  "regexp"
-  "strconv"
-  "strings"
-  "time"
+	"flag"
+	"fmt"
+	"html/template"
+	"net/http"
+	"net/url"
+	"path"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
-  "github.com/davedolben/dev-tools/go/notes/api"
-  "github.com/davedolben/dev-tools/go/notes/bookmarks"
-  "github.com/davedolben/dev-tools/go/notes/data"
+	"github.com/davedolben/dev-tools/go/notes/api"
+	"github.com/davedolben/dev-tools/go/notes/bookmarks"
+	"github.com/davedolben/dev-tools/go/notes/data"
 )
 
 var tagsSplitRegex = regexp.MustCompile(`[\w-]+`)
@@ -369,6 +369,7 @@ func main() {
 
   apiMux := http.NewServeMux()
   api.UseDatabase(bookmarksDb)
+  api.InitKVStore(*fDataRoot)
   api.RegisterHandlers(apiMux)
   mux.Handle("/api/v2/", http.StripPrefix("/api/v2", apiMux))
 
