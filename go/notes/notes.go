@@ -12,6 +12,7 @@ import (
   "strings"
   "time"
 
+  "github.com/davedolben/dev-tools/go/notes/api"
   "github.com/davedolben/dev-tools/go/notes/bookmarks"
   "github.com/davedolben/dev-tools/go/notes/data"
 )
@@ -363,7 +364,13 @@ func main() {
   setupTemplates()
 
   mux := http.NewServeMux()
-  bookmarks.RegisterHandlers(mux, *fDataRoot)
+  bookmarksDb := bookmarks.InitDatabase(*fDataRoot)
+  bookmarks.RegisterHandlers(mux)
+
+  apiMux := http.NewServeMux()
+  api.UseDatabase(bookmarksDb)
+  api.RegisterHandlers(apiMux)
+  mux.Handle("/api/v2/", http.StripPrefix("/api/v2", apiMux))
 
   mux.HandleFunc("/api/add", handleAddNote)
   mux.HandleFunc("/api/delete", handleDeleteNote)

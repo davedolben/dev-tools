@@ -1,11 +1,11 @@
 package data
 
 import (
-  "encoding/json"
-  "fmt"
-  "io/ioutil"
-  "os"
-  "time"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"time"
 )
 
 type Note struct {
@@ -23,6 +23,7 @@ type NotesQuery struct {
 
 type NotesDatabase interface {
   Add(note *Note) error
+  Update(id int64, note *Note) error
   Delete(id int64) error
   Query(query *NotesQuery) ([]Note, error)
   Flush() error
@@ -105,6 +106,16 @@ func (db *TextNotesDatabase) Delete(id int64) error {
     if note.ID == id {
       db.trash = append(db.trash, note)
       db.notes = append(db.notes[:i], db.notes[i+1:]...)
+      return nil
+    }
+  }
+  return fmt.Errorf("id not found")
+}
+
+func (db *TextNotesDatabase) Update(id int64, newNote *Note) error {
+  for i, note := range db.notes {
+    if note.ID == id {
+      db.notes[i] = *newNote
       return nil
     }
   }

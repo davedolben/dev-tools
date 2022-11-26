@@ -303,12 +303,13 @@ func serveGoLink(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "failed to find golink %q", golink)
 }
 
-func initDatabase(root string) {
+func InitDatabase(root string) data.NotesDatabase {
   var err error
   gDb, err = data.NewTextDatabase(path.Join(root, "bookmarks.json"))
   if err != nil {
     panic(err)
   }
+  return gDb
 }
 
 func setupTemplates() {
@@ -326,12 +327,15 @@ func setupTemplates() {
   listTemplate = template.Must(template.New("list").Funcs(tmplFuncs).Parse(listTemplateString))
 }
 
-func RegisterHandlers(server *http.ServeMux, dataRoot string) {
-  initDatabase(dataRoot)
+func RegisterHandlers(server *http.ServeMux) {
   setupTemplates()
 
   server.HandleFunc("/api/bookmarks/add", handleAdd)
   server.HandleFunc("/api/bookmarks/delete", handleDelete)
+
+  server.HandleFunc("/api/v2/add", handleAdd)
+  server.HandleFunc("/api/v2/delete", handleDelete)
+
   server.HandleFunc("/go/", serveGoLink)
   server.HandleFunc("/go", serveGoLink)
   server.HandleFunc("/bookmarks", serveList)
