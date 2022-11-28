@@ -2,7 +2,7 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 )
@@ -16,6 +16,8 @@ type FileBlobStore struct {
 	filename string
 	blobs map[string]string
 }
+
+var KeyNotFoundError = errors.New("key not found")
 
 func NewFileBlobStore(filename string) (BlobStore, error) {
   f, err := os.Open(filename)
@@ -51,7 +53,7 @@ func NewFileBlobStore(filename string) (BlobStore, error) {
 func (bs *FileBlobStore) Get(key string) (string, error) {
 	data, ok := bs.blobs[key]
 	if !ok {
-		return "", fmt.Errorf("key not found")
+		return "", KeyNotFoundError
 	}
 	return data, nil
 }

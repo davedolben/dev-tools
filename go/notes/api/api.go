@@ -168,12 +168,16 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 
 func handleGetBlob(w http.ResponseWriter, r *http.Request) {
   id := chi.URLParam(r, "id")
-  data, err := gBlobStore.Get(id)
+  value, err := gBlobStore.Get(id)
   if err != nil {
-    http.Error(w, err.Error(), 500)
+    code := 500
+    if err == data.KeyNotFoundError {
+      code = 404
+    }
+    http.Error(w, err.Error(), code)
     return
   }
-  fmt.Fprintf(w, "%s", data)
+  fmt.Fprintf(w, "%s", value)
 }
 
 func handleSetBlob(w http.ResponseWriter, r *http.Request) {
