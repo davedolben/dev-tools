@@ -9,16 +9,16 @@ mkdir -p "$bin_dir"
 cd "${script_dir}/go"
 
 # Add these as environment variables to turn on features
-DO_MAC=
-DO_ARM=
+DO_MAC=true
+DO_ARM=true
 while [ "$#" -gt "0" ]; do
   case "$1" in
-    "--macos")
-      DO_MAC=true
+    "--no-macos")
+      DO_MAC=
       shift
       ;;
-    "--arm")
-      DO_ARM=true
+    "--no-arm")
+      DO_ARM=
       shift
       ;;
     *)
