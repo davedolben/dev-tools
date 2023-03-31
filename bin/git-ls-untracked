@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# use -z to use '\0' instead of newline for piping into xargs (with xargs -0)
+
+# --others tells it to include untracked files
+# --exclude-standard tells it to use standard git exclusions plus .gitignores
+git ls-files --others --exclude-standard "$@"
+
