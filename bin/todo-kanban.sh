@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+#
+# Neat little script to parse a taskpaper file and extract certain items with specific tags.
+#
+# Note that you can additionally filter it by adding config lines into the taskpaper file like so:
+#   $filter(...)   - Additionally filter everything to lines including this string
+#   $exclude(...)  - Additionally filter out lines including this string
+#
+
 color_clear="\e[0m"
 color_red="\e[31m"
 color_green="\e[32m"
@@ -19,17 +27,21 @@ function print_logo() {
 }
 
 function print_bucket() {
-  # Grab the first arg as a search parameter
-  tag="$1"
-  shift
-  cmd="grep \"$tag\" \"$filename\""
-
-  # Exclude lines with any tags after the first one
-  excludes=
+  # filter/exclude lines with any tags after the first one
+  local filters=
+  local excludes=
   while [ "$#" -gt "0" ]; do
-    excludes+=" -e \"$1\""
+    if [[ "$1" =~ ^!.* ]]; then
+      excludes+=" -e \"$(echo "$1" | sed -r 's/^!//')\""
+    else
+      filters+=" | grep -e \"$1\""
+    fi
     shift
   done
+  local cmd="cat \"$filename\""
+  if [ ! -z "$filters" ]; then
+    cmd+=" $filters"
+  fi
   if [ ! -z "$excludes" ]; then
     cmd+=" | grep -v $excludes"
   fi
@@ -48,6 +60,21 @@ function print_buckets() {
   date
   echo ""
   print_logo
+
+  # Find any options stated in the file
+  local options="$(grep '^\$[^(]\([^)]\)\S*$' "$filename" | sed -r 's/\$([^\(]+)\(([^\)]+)\)/\1=\2/')"
+  local additional_filters=""
+  while read line; do
+    if [[ ! "$line" =~ ^\S*$ ]]; then
+      additional_filters+=" $(echo "$line" | sed -r 's/.*=(.*)/\1/')"
+    fi
+  done <<<"$(echo "$options")"
+
+  if [ ! -z "$additional_filters" ]; then
+    echo ""
+    echo "Additionally filtering to: $additional_filters"
+  fi
+
   echo ""
   echo ""
 
@@ -57,22 +84,37 @@ function print_buckets() {
   echo ""
 
   printf "\n#####  ${color_red}Now${color_clear}  #####\n\n"
-  print_bucket @now @done
+  print_bucket @now !@done $additional_filters
   echo ""
 
   printf "\n#####  ${color_green}Today${color_clear}  #####\n\n"
-  print_bucket @today @now @done
+  print_bucket @today !@now !@done $additional_filters
   echo ""
 
   printf "\n#####  ${color_blue}This Week${color_clear}  #####\n\n"
-  print_bucket @thisweek @now @today @done
+  print_bucket @thisweek !@now !@today !@done $additional_filters
   echo ""
 }
+
+# Current timestamp in epoch seconds (do this once for consistency)
+#d="$(date +%s)"
+## Next desired timestamp
+#next_d="$(echo "$(date -j -f %s ${d})")"
+#date -j -f %s $next_d
+#exit 0
 
 print_buckets
 
 # Re-run on any changes to the target file
-fswatch -0 "$filename" | while read -d "" event; do
+# This syntax seems to start up the two commands in parallel and concatenate their outputs into
+# one stream.
+#   Ref: https://catern.com/posts/pipes.html
+#{ fswatch -0 "$filename" &
+#  while true; do sleep 10; printf "ping\0"; done & } \
+#  | while read -d "" event
+fswatch -0 "$filename" | while read -d "" event
+do
   print_buckets
 done
+exit 0
 
