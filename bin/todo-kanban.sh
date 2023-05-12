@@ -83,15 +83,15 @@ function print_buckets() {
     /Weekly Goals/' "$filename"
   echo ""
 
-  printf "\n#####  ${color_red}Now${color_clear}  #####\n\n"
+  printf "\n${color_red}#####  Now  #####${color_clear}\n\n"
   print_bucket @now !@done $additional_filters
   echo ""
 
-  printf "\n#####  ${color_green}Today${color_clear}  #####\n\n"
+  printf "\n${color_green}#####  Today  #####${color_clear}\n\n"
   print_bucket @today !@now !@done $additional_filters
   echo ""
 
-  printf "\n#####  ${color_blue}This Week${color_clear}  #####\n\n"
+  printf "\n${color_blue}#####  This Week  #####${color_clear}\n\n"
   print_bucket @thisweek !@now !@today !@done $additional_filters
   echo ""
 }
