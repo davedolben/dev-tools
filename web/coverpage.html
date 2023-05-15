@@ -25,6 +25,7 @@ body {
 }
 #content {
   font-size: 108px;
+  text-align: center;
 }
 .footer {
   color: #aaa;
@@ -56,11 +57,26 @@ body {
 </div>
 <script type="text/javascript">
 
-const content = document.querySelector("#content");
-content.oninput = (e) => {
-  const content = e.target.textContent.trim();
+const setTitle = (content) => {
   document.title = content;
+  let search = new URLSearchParams(window.location.search);
+  search.set("title", content);
+  history.replaceState(null, "", window.location.pathname + "?" + search.toString());
 };
+
+const contentElement = document.querySelector("#content");
+content.oninput = (e) => {
+  const title = e.target.textContent.trim();
+  setTitle(title);
+};
+
+// Check if there's anything in the URL params.
+let search = new URLSearchParams(window.location.search);
+const initTitle = search.get("title");
+if (initTitle) {
+  contentElement.textContent = initTitle;
+  setTitle(initTitle);
+}
 
 </script>
 </body>
