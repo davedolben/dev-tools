@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+* {
+  font-family: "arial";
+}
+body {
+  margin: 0;
+}
+#root {
+  position: absolute;
+  inset: 0;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+.flex-fill {
+  flex-grow: 1;
+}
+#content {
+  font-size: 108px;
+}
+.footer {
+  color: #aaa;
+  margin-bottom: 12px;
+}
+</style>
+
+<title>&lt;Title Goes Here&gt;</title>
+</head>
+
+<body>
+<div id="root" class="flex-column">
+  <div class="flex-fill"></div>
+  <div class="flex-row">
+    <div class="flex-fill"></div>
+    <div contenteditable id="content">
+      &lt;Title Goes Here&gt;
+    </div>
+    <div class="flex-fill"></div>
+  </div>
+  <div class="flex-fill"></div>
+  <div class="flex-row">
+    <div class="flex-fill"></div>
+    <div class="footer">
+      A cover page for your tabs to help with MacOS Mission Control. Click to edit.
+    </div>
+    <div class="flex-fill"></div>
+  </div>
+</div>
+<script type="text/javascript">
+
+const content = document.querySelector("#content");
+content.oninput = (e) => {
+  const content = e.target.textContent.trim();
+  document.title = content;
+};
+
+</script>
+</body>
+</html>
