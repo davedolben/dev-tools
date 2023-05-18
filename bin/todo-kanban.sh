@@ -12,6 +12,7 @@ color_clear="\e[0m"
 color_red="\e[31m"
 color_green="\e[32m"
 color_blue="\e[94m"
+color_yellow="\e[94m"
 
 filename="$1"
 if [ -z "$filename" ]; then
@@ -50,7 +51,9 @@ function print_bucket() {
   cmd+=" | sed -r \"s/^[ \t]+//g\""
 
   #echo "$cmd"
-  eval "$cmd"
+
+  # Highlight tags (honestly don't really understand how this works)
+  eval "$cmd" | sed -r 's/(@[a-zA-Z0-9_:\/\-]+)/\'$'\033[33m&\033[0m/g'
 }
 
 # TODO: figure out how to load the file into memory then do these ops so I'm not
