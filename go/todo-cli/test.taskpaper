@@ -3,10 +3,10 @@ Project:
   - Task 1
   - Task 2
   @subproject
-    - Sub Task
+    - Sub Task @now
     - Subtask 2
   @subproject-2
-    - Sub Task
+    - Sub Task @today @now
     - Subtask 2
 something else at the root
 

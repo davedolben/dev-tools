@@ -11,10 +11,12 @@ import (
 type Item struct {
 	Text string
 	Children []*Item
+	Tags []string
 }
 
 type Document struct {
 	Items []*Item
+	AllItems []*Item
 }
 
 type PeekingScanner struct {
@@ -38,9 +40,22 @@ func (s *PeekingScanner) Text() string {
 
 func recursivePrint(items []*Item, prefix string) {
 	for _, item := range items {
-		fmt.Printf("%s%s\n", prefix, item.Text)
+		fmt.Printf("%s%s (%s)\n", prefix, item.Text, strings.Join(item.Tags, ","))
 		recursivePrint(item.Children, prefix + "> ")
 	}
+}
+
+func searchByTag(items []*Item, tags []string) []*Item {
+	var found []*Item
+	for _, item := range items {
+		for _, tag := range tags {
+			if sliceContains(item.Tags, tag) {
+				found = append(found, item)
+				break
+			}
+		}
+	}
+	return found
 }
 
 func parseLines(scanner *PeekingScanner, indent string) []*Item {
@@ -95,6 +110,20 @@ func parseLines(scanner *PeekingScanner, indent string) []*Item {
 	return items
 }
 
+func collectAllItems(items []*Item) []*Item {
+	var collected []*Item
+	tagRegex := regexp.MustCompile("@([a-zA-Z0-9-_/:]+)")
+	for _, item := range items {
+		tagMatches := tagRegex.FindAllStringSubmatch(item.Text, -1)
+		for _, match := range tagMatches {
+			item.Tags = append(item.Tags, match[1])
+		}
+		collected = append(collected, item)
+		collected = append(collected, collectAllItems(item.Children)...)
+	}
+	return collected
+}
+
 func parseFile(filename string) *Document {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -108,8 +137,10 @@ func parseFile(filename string) *Document {
 	}
 	pscanner.Scan()
 
+	items := parseLines(pscanner, "")
 	doc := &Document{
-		Items: parseLines(pscanner, ""),
+		Items: items,
+		AllItems: collectAllItems(items),
 	}
 	return doc
 }
