@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -78,6 +79,25 @@ func printThreads(threads []*Item, allItems []*Item) {
 			}
 		} else {
 			fmt.Printf("%s\n", thread.Text)
+		}
+	}
+}
+
+var doneTagRegex = regexp.MustCompile("@done\\(([0-9]{4}-[0-9]{2}-[0-9]{2}).*\\)")
+
+func printDoneToday(items []*Item) {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	for _, item := range items {
+		doneTagMatch := doneTagRegex.FindStringSubmatch(item.Text)
+		if len(doneTagMatch) > 1 && doneTagMatch[1] != "" {
+			date, err := time.Parse("2006-01-02", doneTagMatch[1])
+			if err != nil {
+				panic(err)
+			}
+			if date.Equal(today) {
+				emptyColor.Printf("%s\n", item.Text)
+			}
 		}
 	}
 }

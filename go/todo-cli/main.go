@@ -22,4 +22,7 @@ func main() {
     fmt.Println("")
     fmt.Println("")
   }
+  categoryColor.Printf("Done today:\n")
+  printDoneToday(items.AllItems)
+  fmt.Println("")
 }
