@@ -7,6 +7,10 @@
 
 # Category & 2:
   @something-unimportant
+  @misc
+
+- Something done @misc @done
+- Something @misc @done
 
 Project:
   - Task 1

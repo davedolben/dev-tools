@@ -49,10 +49,15 @@ func recursivePrint(items []*Item, prefix string) {
 }
 
 var threadRegex = regexp.MustCompile("^(?:-[ \t]*)?@([a-zA-Z0-9-_/:]+)[ \t]*$")
+var doneTagRegex = regexp.MustCompile("@done\\(([0-9]{4}-[0-9]{2}-[0-9]{2}).*\\)")
 
-func firstTaskInList (items []*Item) *Item {
+func taskIsDone(item *Item) bool {
+	return strings.Contains(item.Text, "@done")
+}
+
+func firstTaskInList(items []*Item) *Item {
 	for _, item := range items {
-		if strings.HasPrefix(item.Text, "-") {
+		if strings.HasPrefix(item.Text, "-") && !taskIsDone(item) {
 			return item
 		}
 	}
@@ -82,8 +87,6 @@ func printThreads(threads []*Item, allItems []*Item) {
 		}
 	}
 }
-
-var doneTagRegex = regexp.MustCompile("@done\\(([0-9]{4}-[0-9]{2}-[0-9]{2}).*\\)")
 
 func printDoneToday(items []*Item) {
 	now := time.Now()
