@@ -54,6 +54,7 @@ build fileserver fileserver
 build babysitter babysitter
 build notes notes-server
 build captains_chair captains-chair
+build todo-cli todo-cli
 
 (
   # Clear the environment variables (just in this subshell) so we can execute the codegen step

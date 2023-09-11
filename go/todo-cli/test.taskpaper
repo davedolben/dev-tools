@@ -1,0 +1,28 @@
+
+# Category 1:
+  @subproject
+  - Some task
+  @subproject-2
+  @project
+
+# Category & 2:
+  @something-unimportant
+  @misc
+
+- Something done @misc @done
+- Something @misc @done
+
+Project:
+  - Task 1
+  - Task 2
+  @subproject
+    - Sub Task @now
+    - Subtask 2
+  @subproject-2
+    - Sub Task @today @now
+    - Subtask 2
+    - Completed today @done(2023-07-24 11:34)
+    - Completed a while ago @done(2023-04-23 11:34)
+something else at the root
+
+last line
