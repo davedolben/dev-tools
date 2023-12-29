@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Timer</title>
+    <style type="text/css">
+      #app {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+      .row {
+        display: flex;
+        flex-direction: row;
+      }
+      .column {
+        display: flex;
+        flex-direction: column;
+      }
+      .fill {
+        flex-grow: 1;
+      }
+      .timer {
+        font-family: Helvetica, sans-serif;
+        font-size: 148px;
+      }
+      .pretty-input {
+        font-family: Helvetica, sans-serif;
+        padding: 5px 8px;
+        font-size: 24pt;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="column">
+      <div class="fill"></div>
+      <div>
+        <div class="row">
+          <div class="fill"></div>
+          <div class="column">
+            <div class="row">
+              <div class="fill"></div>
+              <span class="pretty-input" contenteditable>Check on e2e tests</span>
+              <div class="fill"></div>
+            </div>
+            <div class="timer">
+              00:00
+            </div>
+            <div class="row">
+              <div class="fill"></div>
+              <input style="margin-right: 6px" type="text" placeholder="timer seconds" id="input-seconds" />
+              <button id="start-button">Start</button>
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="fill"></div>
+        </div>
+      </div>
+      <div class="fill"></div>
+    </div>
+
+    <script type="text/javascript">
+      function always2Digits(n) {
+        if (n < 10) {
+          return `0${n}`;
+        }
+        return `${n}`;
+      }
+      function displaySeconds(t) {
+        const minutes = Math.floor(t / 60);
+        const seconds = Math.floor(t % 60);
+        return `${always2Digits(minutes)}:${always2Digits(seconds)}`;
+      }
+      const timerDiv = document.querySelector(".timer");
+      let targetTime = new Date();
+      //console.log(timerDiv);
+      function refreshTimer() {
+        let remainingTime = (targetTime.getTime() - new Date().getTime()) / 1000;
+        if (remainingTime <= 0) {
+          document.body.style.backgroundColor = "#cc3333";
+          document.body.style.color = "#fff";
+          setTimeout(() => {
+            alert("Timer expired!");
+          }, 1);
+          return;
+        }
+        timerDiv.innerHTML = displaySeconds(remainingTime);
+        setTimeout(refreshTimer, 1000);
+      }
+
+      const durationSeconds = 10 * 60;
+      timerDiv.innerHTML = displaySeconds(durationSeconds);
+      document.querySelector("#start-button").onclick = () => {
+        const inputSeconds = document.querySelector("#input-seconds");
+        let newSeconds = durationSeconds;
+        if (inputSeconds.value && inputSeconds.value !== "") {
+          const value = Number(inputSeconds.value);
+          console.log(inputSeconds.value, value);
+          if (value) {
+            newSeconds = value;
+          }
+        }
+        targetTime = new Date(new Date().getTime() + newSeconds * 1000);
+        refreshTimer();
+      };
+    </script>
+  </body>
+</html>
