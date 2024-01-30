@@ -8,8 +8,8 @@ type="$3"
 
 base_url="https://localhost:8888/api/babysitter/signal"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-certfile="${script_dir}/../ssl/Certificate.crt"
-keyfile="${script_dir}/../ssl/Key.key"
+certfile="${script_dir}/../ssl/generated/Certificate.crt"
+keyfile="${script_dir}/../ssl/generated/Key.key"
 
 curl -X POST \
   --cert "${certfile}" \

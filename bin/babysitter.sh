@@ -2,7 +2,7 @@
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 
-${script_dir}/../go-bin/babysitter \
+${script_dir}/../go-bin/darwin-arm64/babysitter \
   --static_dir=${script_dir}/../go/babysitter/www \
   --use_ssl \
   --ssl_cert=${script_dir}/../ssl/generated/Certificate.crt \
