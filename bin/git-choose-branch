@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# If fzf is present, use that rather than the custom chooser dialog below
+# https://github.com/junegunn/fzf?tab=readme-ov-file#usage
+if [ ! -z "$(which fzf)" ]; then
+  git branch | sed -r 's/^[ \\*]+//g' | fzf | xargs git checkout
+  exit 0
+fi
+
 # Read all git branches into an array
 # Note 'readarray' isn't available on MacOS
 #readarray -t branches < <(git branch | cut -c 3-)
