@@ -1,8 +1,10 @@
 package main
 
 import (
-  "fmt"
-  "time"
+	"flag"
+	"fmt"
+	"log"
+	"time"
 )
 
 type TestTask struct {
@@ -25,10 +27,28 @@ func (t *IntervalSchedule) ToString() string {
 }
 
 func main() {
+  fFilename := flag.String("filename", "./scheduler-data.json", "file to store scheduler state")
+  flag.Parse()
+
+  storage, err := NewFileStorage(*fFilename)
+  if err != nil {
+    log.Fatal(err)
+  }
+
   scheduler := &Scheduler{
+    Storage: storage,
     Tasks: []*ScheduledTask{
-      &ScheduledTask{
-        Name: "Hello world",
+      {
+        ID: "hello-world-minute",
+        Task: &TestTask{
+          Name: "hello, world (every minute)",
+        },
+        Schedule: &IntervalSchedule{
+          Interval: time.Minute,
+        },
+      },
+      {
+        ID: "hello-world",
         Task: &TestTask{
           Name: "hello, world",
         },
