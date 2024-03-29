@@ -41,8 +41,13 @@ fi
 command="$1"
 shift
 if [ -z "$command" ]; then
-  ls -1 "${dfiles_dir}"
-  exit 0
+  # TODO
+  # if fzf then
+  #ls -1 "${dfiles_dir}"
+  #exit 0
+  # fi
+
+  command="$(ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf)"
 fi
 
 full_path="$(check_for_script "${dfiles_dir}" ${command})"
