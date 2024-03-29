@@ -47,7 +47,7 @@ if [ -z "$command" ]; then
   #exit 0
   # fi
 
-  command="$(ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf)"
+  command="$(ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf --border --preview-window up --preview "cat ${dfiles_dir}/{}.sh")"
 fi
 
 full_path="$(check_for_script "${dfiles_dir}" ${command})"
