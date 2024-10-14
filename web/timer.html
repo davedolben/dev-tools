@@ -30,6 +30,34 @@
         padding: 5px 8px;
         font-size: 24pt;
       }
+      input.clock-input {
+        font-family: Helvetica, sans-serif;
+        font-size: 148px;
+        border: none;
+        padding: 3px 5px;
+      }
+
+      .txt,
+      .hide {
+        margin: 0;
+        padding: 0;
+      }
+
+      .txt {
+        border: none;
+        min-width: 10px;
+      }
+
+      .txt:focus-visible {
+        outline: none;
+      }
+
+      .hide {
+        position: absolute;
+        height: 0;
+        overflow: hidden;
+        white-space: pre;
+      }
     </style>
   </head>
   <body>
@@ -43,6 +71,14 @@
               <div class="fill"></div>
               <span class="pretty-input" contenteditable>Check on e2e tests</span>
               <div class="fill"></div>
+            </div>
+            <div>
+              <input class="clock-input" type="number" id="input-minutes" value="0" />
+              :
+              <span>
+                <span class="hide" id="input-seconds-size"></span>
+                <input class="clock-input txt" type="number" id="input-seconds" value="0" />
+              </span>
             </div>
             <div class="timer">
               00:00
@@ -61,6 +97,19 @@
     </div>
 
     <script type="text/javascript">
+      function resizableInput(span, input) {
+        span.className = "hide";
+        input.className = "txt";
+
+        const resize = () => {
+          span.textContent = input.value;
+          input.style.width = span.offsetWidth + "px";
+        };
+        input.addEventListener("input", resize);
+      }
+
+      resizableInput(document.querySelector("#input-seconds-size"), document.querySelector("#input-seconds"));
+
       function always2Digits(n) {
         if (n < 10) {
           return `0${n}`;

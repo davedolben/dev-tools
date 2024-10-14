@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Accepts a grep regex expression to filter out branch names, and runs the
+# passing branch names through git-graph
+
+exp="$1"
+# Cut -c 3- strips off the first three characters (indicators)
+git branch | grep "$exp" | cut -c 3- | xargs -I {} git graph {}
+
