@@ -8,7 +8,7 @@ set relativenumber
 
 set colorcolumn=100
 
-# Requiers the file from lua/init.lua, which loads / configures a bunch of plugins
+" Requires the file from lua/init.lua, which loads / configures a bunch of plugins
 lua require("init")
 
 " \t char == 2 columns

@@ -22,4 +22,5 @@ lspconfig.gopls.setup{}
 
 -- Mapping for the copilot plugin
 vim.keymap.set('i', '<C-Space>', '<Plug>(copilot-suggest)')
+vim.keymap.set('n', 'gr', '<cmd> lua vim.lsp.buf.references() <cr>')
 
