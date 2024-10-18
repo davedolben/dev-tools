@@ -40,5 +40,7 @@ map <leader>p :Telescope find_files <Enter>
 map <C-p> :Telescope find_files <Enter>
 nmap <leader>ff :Telescope find_files <Enter>
 nmap <leader>fg :Telescope live_grep <Enter>
-nmap <leader>. <cmd>lua vim.lsp.buf.code_action() <CR>
+nmap <leader>. <cmd>lua vim.lsp.buf.code_action() <Enter>
+
+nmap QQ :q <Enter>
 
