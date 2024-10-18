@@ -26,6 +26,8 @@ set smartindent
 set incsearch
 " Highlight search matches
 set hlsearch
+" Case-insensitive search by default
+set ignorecase
 
 " Make backspace work as expected in insert mode in non-MacOS default Vim installations
 set backspace=indent,eol,start
@@ -34,7 +36,9 @@ set backspace=indent,eol,start
 map j gj
 map k gk
 
+map <leader>p :Telescope find_files <Enter>
 map <C-p> :Telescope find_files <Enter>
-map <leader>ff :Telescope find_files <Enter>
-map <leader>fg :Telescope live_grep <Enter>
+nmap <leader>ff :Telescope find_files <Enter>
+nmap <leader>fg :Telescope live_grep <Enter>
+nmap <leader>. <cmd>lua vim.lsp.buf.code_action() <CR>
 
