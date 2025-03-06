@@ -9,15 +9,15 @@ mkdir -p "$bin_dir"
 cd "${script_dir}/go"
 
 # Add these as environment variables to turn on features
-DO_MAC=true
-DO_ARM=true
+DO_MAC=
+DO_ARM=
 while [ "$#" -gt "0" ]; do
   case "$1" in
-    "--no-macos")
+    "--crossbuild-macos")
       DO_MAC=
       shift
       ;;
-    "--no-arm")
+    "--crossbuild-arm")
       DO_ARM=
       shift
       ;;
@@ -56,6 +56,8 @@ build notes notes-server
 build captains_chair captains-chair
 build todo-cli todo-cli
 build timer timer-cli
+build pastebin pastebin
+build s3-upload s3-upload
 
 (
   # Clear the environment variables (just in this subshell) so we can execute the codegen step
