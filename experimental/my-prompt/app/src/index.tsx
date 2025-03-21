@@ -1,0 +1,58 @@
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
+import "./style.css";
+import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
+import { Prompt } from "./prompt";
+
+const Layout = () => {
+  return (
+    <>
+      <div>
+        <div>
+          <Link to="/">Home</Link>
+          <span> | </span>
+          <Link to="/settings">Settings</Link>
+        </div>
+        <hr />
+        <Outlet />
+      </div>
+    </>
+  );
+};
+
+const Settings = () => {
+  return (
+    <>
+      <div>Settings</div>
+    </>
+  );
+}
+
+const Main = () => {
+  return (
+    <>
+      <Prompt />
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Main />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
+const root = document.getElementById('root');
+if (!root) {
+  throw new Error("failed to find root element");
+}
+ReactDOM.createRoot(root).render(<App />);

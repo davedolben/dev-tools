@@ -1,0 +1,71 @@
+html {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.todo-item {
+  padding: 5px 8px;
+}
+.todo-item:not(:last-child) {
+  margin-bottom: 5px;
+}
+
+.overdue {
+  background-color: red;
+  color: white;
+}
+.almost-due {
+  background-color: orange;
+  color: white;
+}
+
+.badge {
+  background-color: #666;
+  border-radius: 12px;
+  color: white;
+  font-size: 10pt;
+  padding: 3px 5px;
+}
+
+.tweet-container {
+  border-radius: 12px;
+  padding: 12px 18px;
+  border: solid 1px black;
+}
+.tweet-container:not(:first-child) {
+  margin-top: 12px;
+}
+.tweet-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.link {
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.button {
+  cursor: pointer;
+}
+.button-big-blue {
+  background-color: blue;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.inline-text-input {
+  border: none;
+}
+
+.left-margin {
+  margin-left: 8px;
+}
+.top-margin {
+  margin-top: 8px;
+}
