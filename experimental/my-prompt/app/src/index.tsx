@@ -6,17 +6,30 @@ import { Prompt } from "./prompt";
 
 const Layout = () => {
   return (
-    <>
-      <div>
-        <div>
-          <Link to="/">Home</Link>
-          <span> | </span>
-          <Link to="/settings">Settings</Link>
-        </div>
-        <hr />
+    <div style={{
+      height: '100vh',
+      width: '100vw',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        padding: '16px',
+        borderBottom: '1px solid #eee',
+        backgroundColor: 'white'
+      }}>
+        <Link to="/" style={{ textDecoration: 'none', color: '#333' }}>Home</Link>
+        <span style={{ margin: '0 10px', color: '#ccc' }}>|</span>
+        <Link to="/settings" style={{ textDecoration: 'none', color: '#333' }}>Settings</Link>
+      </div>
+      <div style={{
+        flex: 1,
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
         <Outlet />
       </div>
-    </>
+    </div>
   );
 };
 
