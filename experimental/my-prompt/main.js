@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
+const isDev = require('electron-is-dev');
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -11,9 +12,10 @@ const createWindow = () => {
     }
   });
 
-  //win.loadFile('index.html');
-  win.loadURL(`file://${path.join(__dirname, 'dist/frontend/index.html')}`);
-  //win.loadURL(`http://localhost:8101`);
+  const startUrl = isDev ?
+    `http://localhost:8101` : // For development with webpack dev server
+    `file://${path.join(__dirname, 'dist/frontend/index.html')}`; // For production
+  win.loadURL(startUrl);
 }
 
 app.whenReady().then(() => {

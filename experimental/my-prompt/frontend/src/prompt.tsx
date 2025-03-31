@@ -183,6 +183,7 @@ export const Prompt = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Enter your prompt..."
+              disabled={results.some(result => !result.output)}
               style={{
                 width: '100%',
                 padding: '12px 20px 12px 40px',
