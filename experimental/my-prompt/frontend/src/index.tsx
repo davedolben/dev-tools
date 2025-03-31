@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./style.css";
 import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
 import { Prompt } from "./prompt";
+import { HashRouter } from "react-router-dom";
 
 const Layout = () => {
   return (
@@ -50,16 +51,19 @@ const Main = () => {
 };
 
 const App = () => {
+  // Note that the browser router doesn't work in Electron.
+  // Suggestion was to use HashRouter.
+  // https://stackoverflow.com/questions/36505404/how-to-use-react-router-with-electron
   return (
     <>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Main />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </>
   );
 };
@@ -69,3 +73,4 @@ if (!root) {
   throw new Error("failed to find root element");
 }
 ReactDOM.createRoot(root).render(<App />);
+console.log("Wave");

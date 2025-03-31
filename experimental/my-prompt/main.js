@@ -11,7 +11,9 @@ const createWindow = () => {
     }
   });
 
-  win.loadFile('index.html');
+  //win.loadFile('index.html');
+  win.loadURL(`file://${path.join(__dirname, 'dist/frontend/index.html')}`);
+  //win.loadURL(`http://localhost:8101`);
 }
 
 app.whenReady().then(() => {

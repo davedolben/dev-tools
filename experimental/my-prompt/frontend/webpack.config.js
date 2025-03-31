@@ -7,7 +7,7 @@ module.exports = {
   mode: prod ? 'production' : 'development',
   entry: './src/index.tsx',
   output: {
-    path: __dirname + '/../dist/app/',
+    path: __dirname + '/../dist/frontend/',
   },
   module: {
     rules: [
@@ -33,7 +33,7 @@ module.exports = {
     new MiniCssExtractPlugin(),
   ],
   devServer: {
-    static: "../dist/app/",
+    static: "../dist/frontend/",
     port: 8101,
     // So react router works
     historyApiFallback: true,
