@@ -1,23 +1,37 @@
 import React, { useEffect, useState, useRef } from "react";
 
+const api = (window as any).api;
+
 // Interface for prompt results
 interface PromptResult {
   id: string;
   input: string;
-  output: string;
+  // If not present, the prompt is still being processed.
+  output?: string;
   timestamp: Date;
 }
 
 // Interface for prompt handlers
 interface PromptHandler {
   name: string;
+  canHandle: (input: string) => boolean;
   handle: (input: string) => Promise<string>;
 }
 
 // Initial simple echo handler
 const echoHandler: PromptHandler = {
   name: "echo",
-  handle: async (input: string) => `Echo: ${input}`,
+  canHandle: (input: string) => input.startsWith("echo "),
+  handle: async (input: string) => `Echo: ${input.substring(5)}`,
+};
+
+const asyncEchoHandler: PromptHandler = {
+  name: "asyncEcho",
+  canHandle: (input: string) => input.startsWith("asyncEcho "),
+  handle: async (input: string) => {
+    const result = await api.asyncEcho(input.substring(10));
+    return `Async echo: ${result}`;
+  },
 };
 
 export const Prompt = () => {
@@ -26,7 +40,7 @@ export const Prompt = () => {
   const resultsEndRef = useRef<HTMLDivElement>(null);
   
   // Array of handlers - can be extended in the future
-  const handlers: PromptHandler[] = [echoHandler];
+  const handlers: PromptHandler[] = [echoHandler, asyncEchoHandler];
 
   // Scroll to bottom when new results are added
   useEffect(() => {
@@ -38,14 +52,30 @@ export const Prompt = () => {
     if (!inputValue.trim()) return;
 
     // Process input through all handlers
+    let didHandle = false;
     for (const handler of handlers) {
-      const output = await handler.handle(inputValue);
+      if (!handler.canHandle(inputValue)) {
+        continue;
+      }
+
       const result: PromptResult = {
         id: crypto.randomUUID(),
         input: inputValue,
-        output,
         timestamp: new Date(),
       };
+      setResults(prev => [...prev, result]);
+
+      const output = await handler.handle(inputValue);
+      result.output = output;
+      didHandle = true; 
+    }
+    if (!didHandle) {
+      const result: PromptResult = {
+        id: crypto.randomUUID(),
+        input: inputValue,
+        output: "No handler found for input",
+        timestamp: new Date(),
+      }
       setResults(prev => [...prev, result]);
     }
     
@@ -93,7 +123,15 @@ export const Prompt = () => {
                 <strong>Input:</strong> {result.input}
               </div>
               <div>
-                <strong>Output:</strong> {result.output}
+                {result.output ? (
+                  <>
+                    <strong>Output:</strong> {result.output}
+                  </>
+                ) : (
+                  <>
+                    Processing...
+                  </>
+                )}
               </div>
             </div>
           ))}

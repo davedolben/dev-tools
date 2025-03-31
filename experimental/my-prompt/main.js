@@ -25,6 +25,14 @@ app.whenReady().then(() => {
     return `echo ${message}`;
   });
 
+  ipcMain.handle('async-echo', async (_event, message) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`echo ${message}`);
+      }, 3000);
+    });
+  });
+
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit();
