@@ -38,6 +38,7 @@ export const Prompt = () => {
   const [inputValue, setInputValue] = useState("");
   const [results, setResults] = useState<PromptResult[]>([]);
   const resultsEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Array of handlers - can be extended in the future
   const handlers: PromptHandler[] = [echoHandler, asyncEchoHandler];
@@ -45,6 +46,14 @@ export const Prompt = () => {
   // Scroll to bottom when new results are added
   useEffect(() => {
     resultsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [results]);
+
+  // Focus input when all results are complete
+  useEffect(() => {
+    const allComplete = results.every(result => result.output);
+    if (allComplete && inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [results]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +76,8 @@ export const Prompt = () => {
 
       const output = await handler.handle(inputValue);
       result.output = output;
+      // Make a copy so we trigger a re-render.
+      setResults(prev => [...prev]);
       didHandle = true; 
     }
     if (!didHandle) {
@@ -179,6 +190,7 @@ export const Prompt = () => {
               <line x1="22" y1="22" x2="16.65" y2="16.65" />
             </svg>
             <input
+              ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
