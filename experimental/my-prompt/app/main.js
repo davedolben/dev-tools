@@ -14,7 +14,7 @@ const createWindow = () => {
 
   const startUrl = isDev ?
     `http://localhost:8101` : // For development with webpack dev server
-    `file://${path.join(__dirname, 'dist/frontend/index.html')}`; // For production
+    `file://${path.join(__dirname, '../dist/frontend/index.html')}`; // For production
   win.loadURL(startUrl);
 }
 
