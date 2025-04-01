@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 const isDev = require('electron-is-dev');
+const { spawn } = require('child_process');
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -32,6 +33,34 @@ app.whenReady().then(() => {
       setTimeout(() => {
         resolve(`echo ${message}`);
       }, 3000);
+    });
+  });
+
+  ipcMain.handle('execute', async (_event, { command, arguments: args }) => {
+    return new Promise((resolve, reject) => {
+      const process = spawn(command, args);
+      let stdout = '';
+      let stderr = '';
+
+      process.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      process.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      process.on('close', (code) => {
+        resolve({
+          stdout,
+          stderr,
+          code
+        });
+      });
+
+      process.on('error', (error) => {
+        reject(error);
+      });
     });
   });
 

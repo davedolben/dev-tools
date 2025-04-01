@@ -34,6 +34,21 @@ const asyncEchoHandler: PromptHandler = {
   },
 };
 
+const executeHandler: PromptHandler = {
+  name: "execute",
+  canHandle: (input: string) => input.startsWith("exec "),
+  handle: async (input: string) => {
+    const commandStr = input.substring(5).trim();
+    const [command, ...args] = commandStr.split(/\s+/);
+    try {
+      const result = await api.execute(command, args);
+      return `\n${result.stdout}${result.stderr ? `\nErrors:\n${result.stderr}` : ''}`;
+    } catch (error: any) {
+      return `Error executing command: ${error?.message || 'Unknown error'}`;
+    }
+  },
+};
+
 export const Prompt = () => {
   const [inputValue, setInputValue] = useState("");
   const [results, setResults] = useState<PromptResult[]>([]);
@@ -41,7 +56,7 @@ export const Prompt = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   
   // Array of handlers - can be extended in the future
-  const handlers: PromptHandler[] = [echoHandler, asyncEchoHandler];
+  const handlers: PromptHandler[] = [echoHandler, asyncEchoHandler, executeHandler];
 
   // Scroll to bottom when new results are added
   useEffect(() => {
@@ -133,7 +148,7 @@ export const Prompt = () => {
               <div style={{ marginBottom: '8px' }}>
                 <strong>Input:</strong> {result.input}
               </div>
-              <div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>
                 {result.output ? (
                   <>
                     <strong>Output:</strong> {result.output}
@@ -194,7 +209,7 @@ export const Prompt = () => {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Enter your prompt..."
+              placeholder="Enter your prompt... (try 'exec ls -la' or 'echo hello')"
               disabled={results.some(result => !result.output)}
               style={{
                 width: '100%',

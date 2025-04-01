@@ -10,4 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   asyncEcho: (message) => {
     return ipcRenderer.invoke('async-echo', message);
   },
+  execute: (command, arguments) => {
+    return ipcRenderer.invoke('execute', { command, arguments });
+  },
 });
