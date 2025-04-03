@@ -95,3 +95,72 @@ func (a *App) Execute(command string, args []string) CommandOutput {
 		Stderr: string(stderrBytes),
 	}
 }
+
+func (a *App) ExecuteInNewWindow(command string, args []string) CommandOutput {
+	// Construct the command with arguments
+	cmdStr := command
+	for _, arg := range args {
+		cmdStr += " " + arg
+	}
+
+	// Create the AppleScript command
+	appleScript := fmt.Sprintf(`
+		tell application "iTerm"
+			create window with default profile
+			tell current window
+				tell current session
+					write text "%s"
+				end tell
+			end tell
+		end tell
+	`, cmdStr)
+
+	// Execute the AppleScript command
+	cmd := exec.Command("osascript", "-e", appleScript)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return CommandOutput{
+			Error: fmt.Sprintf("Error creating stdout pipe: %v", err),
+		}
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return CommandOutput{
+			Error: fmt.Sprintf("Error creating stderr pipe: %v", err),
+		}
+	}
+
+	if err := cmd.Start(); err != nil {
+		return CommandOutput{
+			Error: fmt.Sprintf("Error starting AppleScript: %v", err),
+		}
+	}
+
+	stdoutBytes, err := io.ReadAll(stdout)
+	if err != nil {
+		return CommandOutput{
+			Error: fmt.Sprintf("Error reading stdout: %v", err),
+		}
+	}
+
+	stderrBytes, err := io.ReadAll(stderr)
+	if err != nil {
+		return CommandOutput{
+			Error: fmt.Sprintf("Error reading stderr: %v", err),
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return CommandOutput{
+			Stdout: string(stdoutBytes),
+			Stderr: string(stderrBytes),
+			Error:  fmt.Sprintf("AppleScript failed: %v", err),
+		}
+	}
+
+	return CommandOutput{
+		Stdout: string(stdoutBytes),
+		Stderr: string(stderrBytes),
+	}
+}

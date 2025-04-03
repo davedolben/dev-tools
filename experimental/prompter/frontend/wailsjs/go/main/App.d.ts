@@ -6,4 +6,6 @@ export function AsyncEcho(arg1:string):Promise<string>;
 
 export function Execute(arg1:string,arg2:Array<string>):Promise<main.CommandOutput>;
 
+export function ExecuteInNewWindow(arg1:string,arg2:Array<string>):Promise<main.CommandOutput>;
+
 export function Greet(arg1:string):Promise<string>;

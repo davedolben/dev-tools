@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {AsyncEcho, Execute} from "../wailsjs/go/main/App";
+import {AsyncEcho, Execute, ExecuteInNewWindow} from "../wailsjs/go/main/App";
 
 // Interface for prompt results
 interface PromptResult {
@@ -48,6 +48,21 @@ const executeHandler: PromptHandler = {
   },
 };
 
+const executeInNewWindowHandler: PromptHandler = {
+  name: "executeInNewWindow",
+  canHandle: (input: string) => input.startsWith("start "),
+  handle: async (input: string) => {
+    const commandStr = input.substring(6).trim();
+    const [command, ...args] = commandStr.split(/\s+/);
+    try {
+      const result = await ExecuteInNewWindow(command, args);
+      return `\n${result.stdout}${result.stderr ? `\nErrors:\n${result.stderr}` : ''}`;
+    } catch (error: any) {
+      return `Error executing command in new window: ${error?.message || 'Unknown error'}`;
+    }
+  },
+};
+
 export const Prompt = () => {
   const [inputValue, setInputValue] = useState("");
   const [results, setResults] = useState<PromptResult[]>([]);
@@ -59,6 +74,7 @@ export const Prompt = () => {
     echoHandler,
     asyncEchoHandler,
     executeHandler,
+    executeInNewWindowHandler,
   ];
 
   // Scroll to bottom when new results are added
