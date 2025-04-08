@@ -85,6 +85,7 @@
   cursor: grab;
   user-select: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
 .event-item:active {
@@ -95,6 +96,38 @@
   opacity: 0.5;
   transform: scale(0.95);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.event-item.event-start {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.event-item.event-end {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.event-item.event-middle {
+  border-radius: 0;
+}
+
+.event-item.event-start::before,
+.event-item.event-end::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: inherit;
+}
+
+.event-item.event-start::before {
+  left: 0;
+}
+
+.event-item.event-end::after {
+  right: 0;
 }
 
 /* Modal Styles */

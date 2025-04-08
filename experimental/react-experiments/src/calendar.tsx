@@ -7,6 +7,7 @@ interface Event {
   id: string;
   date: Date;
   description: string;
+  length: number; // Number of days the event spans
 }
 
 interface CalendarProps {
@@ -19,6 +20,7 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
 
@@ -32,8 +34,16 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
+    setSelectedEvent(undefined);
     setIsModalOpen(true);
     onDateSelect?.(date);
+  };
+
+  const handleEventClick = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the date click
+    setSelectedEvent(event);
+    setSelectedDate(event.date);
+    setIsModalOpen(true);
   };
 
   const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
@@ -44,8 +54,19 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     setEvents([...events, newEvent]);
   };
 
+  const handleEditEvent = (updatedEvent: Event) => {
+    setEvents(events.map(event => 
+      event.id === updatedEvent.id ? updatedEvent : event
+    ));
+  };
+
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => isSameDay(event.date, date));
+    return events.filter(event => {
+      const eventStart = event.date;
+      const eventEnd = new Date(eventStart);
+      eventEnd.setDate(eventEnd.getDate() + event.length - 1);
+      return date >= eventStart && date <= eventEnd;
+    });
   };
 
   const handleDragStart = (event: React.DragEvent, eventItem: Event) => {
@@ -116,17 +137,28 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
             >
               <span className="day-number">{format(day, 'd')}</span>
               <div className="day-events">
-                {dayEvents.map(event => (
-                  <div
-                    key={event.id}
-                    className="event-item"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, event)}
-                    onDragEnd={handleDragEnd}
-                  >
-                    {event.description}
-                  </div>
-                ))}
+                {dayEvents.map(event => {
+                  const isEventStart = isSameDay(event.date, day);
+                  const eventEnd = new Date(event.date);
+                  eventEnd.setDate(eventEnd.getDate() + event.length - 1);
+                  const isEventEnd = isSameDay(eventEnd, day);
+                  const isEventMiddle = !isEventStart && !isEventEnd;
+                  
+                  return (
+                    <div
+                      key={event.id}
+                      className={`event-item ${isEventStart ? 'event-start' : ''} ${
+                        isEventEnd ? 'event-end' : ''
+                      } ${isEventMiddle ? 'event-middle' : ''}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, event)}
+                      onDragEnd={handleDragEnd}
+                      onClick={(e) => handleEventClick(event, e)}
+                    >
+                      {isEventStart && event.description}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -135,9 +167,14 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
       {selectedDate && (
         <EventModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedEvent(undefined);
+          }}
           selectedDate={selectedDate}
           onAddEvent={handleAddEvent}
+          onEditEvent={handleEditEvent}
+          existingEvent={selectedEvent}
         />
       )}
     </div>
