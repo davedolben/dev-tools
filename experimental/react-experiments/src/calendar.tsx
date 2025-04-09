@@ -207,10 +207,10 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
             <div
               key={day.toString()}
               className={`calendar-day ${
-                isDateInRange(day) ? 'selected' : ''
+                isSameDay(day, new Date()) ? 'selected' : ''
               } ${!isSameMonth(day, startDate) ? 'other-month' : ''} ${
                 isDragOver ? 'drag-over' : ''
-              }`}
+              } ${isWeekend(day) ? 'weekend' : ''}`}
               onClick={() => handleDateClick(day)}
               onDragOver={(e) => handleDragOver(e, day)}
               onDragLeave={handleDragLeave}
@@ -224,7 +224,9 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
                       key={event.id}
                       className={`event-item ${event.isEventStart ? 'event-start' : ''} ${
                         event.isEventEnd ? 'event-end' : ''
-                      } ${event.isEventMiddle ? 'event-middle' : ''}`}
+                      } ${event.isEventMiddle ? 'event-middle' : ''} ${
+                        isWeekend(day) ? 'weekend-event' : ''
+                      }`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, event)}
                       onDragEnd={handleDragEnd}
