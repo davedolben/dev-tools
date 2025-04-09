@@ -10,6 +10,13 @@ interface Event {
   length: number; // Number of days the event spans
 }
 
+interface ProcessedEvent extends Event {
+  endDate: Date;
+  isEventStart: boolean;
+  isEventEnd: boolean;
+  isEventMiddle: boolean;
+}
+
 interface CalendarProps {
   startDate: Date;
   endDate: Date;
@@ -75,13 +82,68 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     return currentDate;
   };
 
-  const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
+  const processAllEvents = (events: Event[], daysInMonth: Date[]): Map<string, ProcessedEvent[]> => {
+    const processedEventsMap = new Map<string, ProcessedEvent[]>();
+    const firstDayIndices = new Map<string, number>();
+
+    // Initialize the map with empty arrays for all days
+    daysInMonth.forEach(day => {
+      processedEventsMap.set(format(day, 'yyyy-MM-dd'), []);
+    });
+
+    // Process each event
+    events.forEach(event => {
       const eventStart = event.date;
       const eventEnd = calculateBusinessDaysEndDate(eventStart, event.length);
-      return date >= eventStart && date <= eventEnd;
+      
+      // Get all days this event spans
+      const eventDays = eachDayOfInterval({ start: eventStart, end: eventEnd });
+      
+      eventDays.forEach(day => {
+        const dayKey = format(day, 'yyyy-MM-dd');
+        if (processedEventsMap.has(dayKey)) {
+          const processedEvent: ProcessedEvent = {
+            ...event,
+            endDate: eventEnd,
+            isEventStart: isSameDay(eventStart, day),
+            isEventEnd: isSameDay(eventEnd, day),
+            isEventMiddle: !isSameDay(eventStart, day) && !isSameDay(eventEnd, day)
+          };
+          processedEventsMap.get(dayKey)?.push(processedEvent);
+        }
+      });
     });
+
+    daysInMonth.forEach(day => {
+      const dayKey = format(day, 'yyyy-MM-dd');
+      if (processedEventsMap.has(dayKey)) {
+        const dayEvents = processedEventsMap.get(dayKey)!;
+        let index = 0;
+        while (index < dayEvents.length) {
+          const event = dayEvents[index];
+          if (firstDayIndices.has(event.id)) {
+            const wantIndex = firstDayIndices.get(event.id)!;
+            if (index !== wantIndex) {
+              dayEvents.splice(index, 0, ...Array(wantIndex - index).fill(null));
+              index = wantIndex;
+            }
+          }
+          index++;
+        }
+        dayEvents.forEach(event => {
+          if (event && event.isEventStart) {
+            firstDayIndices.set(event.id, dayEvents.indexOf(event));
+          }
+        });
+      }
+    });
+    
+
+    return processedEventsMap;
   };
+
+  // Process all events once
+  const processedEventsMap = processAllEvents(events, daysInMonth);
 
   const handleDragStart = (event: React.DragEvent, eventItem: Event) => {
     setDraggedEvent(eventItem);
@@ -138,7 +200,8 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
           <div key={`empty-${index}`} className="calendar-day empty"></div>
         ))}
         {daysInMonth.map((day: Date) => {
-          const dayEvents = getEventsForDate(day);
+          const dayKey = format(day, 'yyyy-MM-dd');
+          const dayEvents = processedEventsMap.get(dayKey) || [];
           const isDragOver = dragOverDate && isSameDay(day, dragOverDate);
           return (
             <div
@@ -155,27 +218,24 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
             >
               <span className="day-number">{format(day, 'd')}</span>
               <div className="day-events">
-                {dayEvents.map(event => {
-                  const eventEnd = calculateBusinessDaysEndDate(event.date, event.length);
-                  const isEventStart = isSameDay(event.date, day);
-                  const isEventEnd = isSameDay(eventEnd, day);
-                  const isEventMiddle = !isEventStart && !isEventEnd;
-                  
-                  return (
+                {dayEvents.map(event => (
+                  event ? (
                     <div
                       key={event.id}
-                      className={`event-item ${isEventStart ? 'event-start' : ''} ${
-                        isEventEnd ? 'event-end' : ''
-                      } ${isEventMiddle ? 'event-middle' : ''}`}
+                      className={`event-item ${event.isEventStart ? 'event-start' : ''} ${
+                        event.isEventEnd ? 'event-end' : ''
+                      } ${event.isEventMiddle ? 'event-middle' : ''}`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, event)}
                       onDragEnd={handleDragEnd}
                       onClick={(e) => handleEventClick(event, e)}
                     >
-                      {isEventStart && event.description}
+                      {event.isEventStart && event.description}
                     </div>
-                  );
-                })}
+                  ) : (
+                    <div className="event-item empty"></div>
+                  )
+                ))}
               </div>
             </div>
           );

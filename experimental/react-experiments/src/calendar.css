@@ -124,6 +124,15 @@
   width: calc(100%);
 }
 
+.event-item.empty {
+  background-color: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+.event-item.empty:hover {
+  box-shadow: none;
+}
+
 .event-item.event-start::before,
 .event-item.event-end::after {
   display: none;
