@@ -123,9 +123,10 @@ const CalendarPage = () => {
 
     try {
       const apiEvent = frontendEventToApiEvent({ ...eventData, id: 'temp' }, calendarId);
-      const newApiEvent = await createEvent(calendarId, apiEvent as Omit<APIEvent, 'id' | 'calendar_id' | 'created_at' | 'updated_at'>);
-      const newEvent = apiEventToFrontendEvent(newApiEvent);
-      setEvents([...events, newEvent]);
+      await createEvent(calendarId, apiEvent as Omit<APIEvent, 'id' | 'calendar_id' | 'created_at' | 'updated_at'>);
+      const apiEvents = await getCalendarEvents(calendarId);
+      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
+      setEvents(frontendEvents);
     } catch (err) {
       setError('Failed to add event');
       console.error(err);
@@ -136,9 +137,9 @@ const CalendarPage = () => {
     try {
       const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
       await updateEvent(parseInt(updatedEvent.id), apiEvent);
-      setEvents(events.map(event => 
-        event.id === updatedEvent.id ? updatedEvent : event
-      ));
+      const apiEvents = await getCalendarEvents(calendarId!);
+      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
+      setEvents(frontendEvents);
     } catch (err) {
       setError('Failed to update event');
       console.error(err);
@@ -148,7 +149,9 @@ const CalendarPage = () => {
   const handleDeleteEvent = async (eventId: string) => {
     try {
       await deleteEvent(parseInt(eventId));
-      setEvents(events.filter(event => event.id !== eventId));
+      const apiEvents = await getCalendarEvents(calendarId!);
+      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
+      setEvents(frontendEvents);
     } catch (err) {
       setError('Failed to delete event');
       console.error(err);
@@ -163,12 +166,9 @@ const CalendarPage = () => {
       const updatedEvent = { ...event, date: newDate };
       const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
       await updateEvent(parseInt(eventId), apiEvent);
-      
-      setEvents(events.map(event =>
-        event.id === eventId
-          ? updatedEvent
-          : event
-      ));
+      const apiEvents = await getCalendarEvents(calendarId!);
+      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
+      setEvents(frontendEvents);
     } catch (err) {
       setError('Failed to update event position');
       console.error(err);
