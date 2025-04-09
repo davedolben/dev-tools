@@ -35,8 +35,8 @@ const CalendarPage = () => {
   const calculateDateRange = (events: Event[]): { startDate: Date; endDate: Date } => {
     if (events.length === 0) {
       return {
-        startDate: new Date(),
-        endDate: addDays(new Date(), 60)
+        startDate: addDays(new Date(), -7),
+        endDate: addDays(new Date(), 7)
       };
     }
 
