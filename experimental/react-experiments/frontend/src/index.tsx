@@ -9,7 +9,7 @@ const Layout = () => {
   return (
     <>
       <div>
-        <div>
+        <div className="nav-bar">
           <Link to="/">Home</Link>
           <span> | </span>
           <Link to="/calendar">Calendar</Link>
