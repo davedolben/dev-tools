@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend } from 'date-fns';
 import './calendar.css';
 import EventModal from './EventModal';
 
@@ -60,11 +60,24 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     ));
   };
 
+  const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
+    let currentDate = new Date(startDate);
+    let remainingDays = businessDays;
+
+    while (remainingDays > 0) {
+      currentDate = addDays(currentDate, 1);
+      if (!isWeekend(currentDate)) {
+        remainingDays--;
+      }
+    }
+
+    return currentDate;
+  };
+
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
       const eventStart = event.date;
-      const eventEnd = new Date(eventStart);
-      eventEnd.setDate(eventEnd.getDate() + event.length - 1);
+      const eventEnd = calculateBusinessDaysEndDate(eventStart, event.length);
       return date >= eventStart && date <= eventEnd;
     });
   };
@@ -138,9 +151,8 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
               <span className="day-number">{format(day, 'd')}</span>
               <div className="day-events">
                 {dayEvents.map(event => {
+                  const eventEnd = calculateBusinessDaysEndDate(event.date, event.length);
                   const isEventStart = isSameDay(event.date, day);
-                  const eventEnd = new Date(event.date);
-                  eventEnd.setDate(eventEnd.getDate() + event.length - 1);
                   const isEventEnd = isSameDay(eventEnd, day);
                   const isEventMiddle = !isEventStart && !isEventEnd;
                   
