@@ -38,8 +38,7 @@ module.exports = {
     // So react router works
     historyApiFallback: true,
     proxy: {
-      //'/api/v2': 'http://localhost:9999',
-      '/api/v2': 'http://backend:8100',
+      '/api/calendars': 'http://localhost:8100',
     },
   },
 };
