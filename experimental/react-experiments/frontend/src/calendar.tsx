@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend, getDay, addMonths, isBefore, isAfter } from 'date-fns';
 import './calendar.css';
 import EventModal from './EventModal';
-
-export interface Event {
-  id: string;
-  date: Date;
-  description: string;
-  length: number; // Number of days the event spans
-}
-
+import { Event } from './calendar-client';
 interface ProcessedEvent extends Event {
   endDate: Date;
   isEventStart: boolean;

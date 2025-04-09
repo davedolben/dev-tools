@@ -2,8 +2,28 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./style.css";
 import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
-import Calendar, { Event } from "./calendar";
+import Calendar from "./calendar";
 import { addDays } from "date-fns";
+import {
+  getCalendars,
+  createCalendar,
+  getCalendarEvents,
+  createEvent,
+  updateEvent,
+  apiEventToFrontendEvent,
+  frontendEventToApiEvent,
+  Event,
+  APIEvent
+} from "./calendar-client";
+
+// API types
+interface Calendar {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Layout = () => {
   return (
@@ -31,6 +51,8 @@ const Main = () => {
 
 const CalendarPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [calendarId, setCalendarId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const calculateDateRange = (events: Event[]): { startDate: Date; endDate: Date } => {
     if (events.length === 0) {
@@ -56,29 +78,97 @@ const CalendarPage = () => {
     };
   };
 
-  const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
-    const newEvent: Event = {
-      ...eventData,
-      id: Math.random().toString(36).substr(2, 9),
+  useEffect(() => {
+    const initializeCalendar = async () => {
+      try {
+        // Get all calendars
+        const calendars = await getCalendars();
+        
+        // If no calendars exist, create one
+        if (!calendars || calendars.length === 0) {
+          const newCalendar = await createCalendar('My Calendar', 'A calendar for my events');
+          setCalendarId(newCalendar.id);
+        } else {
+          setCalendarId(calendars[0].id);
+        }
+      } catch (err) {
+        setError('Failed to initialize calendar');
+        console.error(err);
+      }
     };
-    setEvents([...events, newEvent]);
+
+    initializeCalendar();
+  }, []);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!calendarId) return;
+      
+      try {
+        const apiEvents = (await getCalendarEvents(calendarId) ?? []);
+        const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
+        setEvents(frontendEvents);
+      } catch (err) {
+        setError('Failed to fetch events');
+        console.error(err);
+      }
+    };
+
+    fetchEvents();
+  }, [calendarId]);
+
+  const handleAddEvent = async (eventData: { description: string; date: Date; length: number }) => {
+    if (!calendarId) return;
+
+    try {
+      const apiEvent = frontendEventToApiEvent({ ...eventData, id: 'temp' }, calendarId);
+      const newApiEvent = await createEvent(calendarId, apiEvent as Omit<APIEvent, 'id' | 'calendar_id' | 'created_at' | 'updated_at'>);
+      const newEvent = apiEventToFrontendEvent(newApiEvent);
+      setEvents([...events, newEvent]);
+    } catch (err) {
+      setError('Failed to add event');
+      console.error(err);
+    }
   };
 
-  const handleEditEvent = (updatedEvent: Event) => {
-    setEvents(events.map(event => 
-      event.id === updatedEvent.id ? updatedEvent : event
-    ));
+  const handleEditEvent = async (updatedEvent: Event) => {
+    try {
+      const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
+      await updateEvent(parseInt(updatedEvent.id), apiEvent);
+      setEvents(events.map(event => 
+        event.id === updatedEvent.id ? updatedEvent : event
+      ));
+    } catch (err) {
+      setError('Failed to update event');
+      console.error(err);
+    }
   };
 
-  const handleDrop = (eventId: string, newDate: Date) => {
-    setEvents(events.map(event =>
-      event.id === eventId
-        ? { ...event, date: newDate }
-        : event
-    ));
+  const handleDrop = async (eventId: string, newDate: Date) => {
+    try {
+      const event = events.find(e => e.id === eventId);
+      if (!event) return;
+
+      const updatedEvent = { ...event, date: newDate };
+      const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
+      await updateEvent(parseInt(eventId), apiEvent);
+      
+      setEvents(events.map(event =>
+        event.id === eventId
+          ? updatedEvent
+          : event
+      ));
+    } catch (err) {
+      setError('Failed to update event position');
+      console.error(err);
+    }
   };
 
   const { startDate, endDate } = calculateDateRange(events);
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <>

@@ -3,6 +3,7 @@ package calendar
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,7 +26,7 @@ type Event struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
+	Length      int       `json:"length"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -54,7 +55,7 @@ func InitDB(dbPath string) error {
 			title TEXT NOT NULL,
 			description TEXT,
 			start_time DATETIME NOT NULL,
-			end_time DATETIME NOT NULL,
+			length INTEGER NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (calendar_id) REFERENCES calendars(id)
@@ -100,11 +101,12 @@ func GetCalendarEvents(c *gin.Context) {
 	calendarID := c.Param("id")
 
 	rows, err := db.Query(`
-		SELECT id, calendar_id, title, description, start_time, end_time, created_at, updated_at 
+		SELECT id, calendar_id, title, description, start_time, length, created_at, updated_at 
 		FROM events 
 		WHERE calendar_id = ?
 	`, calendarID)
 	if err != nil {
+		log.Println("Failed to fetch events:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch events"})
 		return
 	}
@@ -119,7 +121,7 @@ func GetCalendarEvents(c *gin.Context) {
 			&event.Title,
 			&event.Description,
 			&event.StartTime,
-			&event.EndTime,
+			&event.Length,
 			&event.CreatedAt,
 			&event.UpdatedAt,
 		)
@@ -180,9 +182,9 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	result, err := db.Exec(`
-		INSERT INTO events (calendar_id, title, description, start_time, end_time, created_at, updated_at)
+		INSERT INTO events (calendar_id, title, description, start_time, length, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, calendarID, event.Title, event.Description, event.StartTime, event.EndTime)
+	`, calendarID, event.Title, event.Description, event.StartTime, event.Length)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create event"})
 		return
@@ -221,9 +223,9 @@ func UpdateEvent(c *gin.Context) {
 
 	_, err = db.Exec(`
 		UPDATE events 
-		SET title = ?, description = ?, start_time = ?, end_time = ?, updated_at = CURRENT_TIMESTAMP
+		SET title = ?, description = ?, start_time = ?, length = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
-	`, event.Title, event.Description, event.StartTime, event.EndTime, eventID)
+	`, event.Title, event.Description, event.StartTime, event.Length, eventID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update event"})
 		return
