@@ -91,6 +91,15 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
       processedEventsMap.set(format(day, 'yyyy-MM-dd'), []);
     });
 
+    // Sort events by start date
+    events.sort((a, b) => {
+      if (isSameDay(a.date, b.date)) {
+        // Sort descending by length
+        return b.length - a.length;
+      }
+      return a.date.getTime() - b.date.getTime();
+    });
+
     // Process each event
     events.forEach(event => {
       const eventStart = event.date;
