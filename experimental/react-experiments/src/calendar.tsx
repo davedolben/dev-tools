@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import './calendar.css';
 import EventModal from './EventModal';
 
-interface Event {
+export interface Event {
   id: string;
   date: Date;
   description: string;
@@ -112,11 +112,24 @@ const MonthView: React.FC<MonthViewProps> = ({
 interface CalendarProps {
   startDate: Date;
   endDate: Date;
+  events: Event[];
   onDateSelect?: (date: Date) => void;
+  onAddEvent?: (eventData: Omit<Event, 'id'>) => void;
+  onEditEvent?: (updatedEvent: Event) => void;
+  onEventClick?: (event: Event, e: React.MouseEvent) => void;
+  onDrop?: (eventId: string, newDate: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect }) => {
-  const [events, setEvents] = useState<Event[]>([]);
+const Calendar: React.FC<CalendarProps> = ({ 
+  startDate, 
+  endDate, 
+  events,
+  onDateSelect,
+  onAddEvent,
+  onEditEvent,
+  onEventClick,
+  onDrop
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
@@ -135,20 +148,15 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     setSelectedEvent(event);
     setSelectedDate(event.date);
     setIsModalOpen(true);
+    onEventClick?.(event, e);
   };
 
   const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
-    const newEvent: Event = {
-      ...eventData,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setEvents([...events, newEvent]);
+    onAddEvent?.(eventData);
   };
 
   const handleEditEvent = (updatedEvent: Event) => {
-    setEvents(events.map(event => 
-      event.id === updatedEvent.id ? updatedEvent : event
-    ));
+    onEditEvent?.(updatedEvent);
   };
 
   const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
@@ -257,12 +265,7 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
   const handleDrop = (event: React.DragEvent, targetDate: Date) => {
     event.preventDefault();
     if (draggedEvent) {
-      const updatedEvents = events.map(event => 
-        event.id === draggedEvent.id 
-          ? { ...event, date: targetDate }
-          : event
-      );
-      setEvents(updatedEvents);
+      onDrop?.(draggedEvent.id, targetDate);
       setDraggedEvent(null);
       setDragOverDate(null);
     }
