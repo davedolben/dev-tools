@@ -18,6 +18,31 @@
   font-size: 1.5rem;
 }
 
+.calendar-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+}
+
+.month-view {
+  min-width: 600px;
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -25,6 +50,7 @@
   background-color: #e9ecef;
   padding: 1px;
   border-radius: 0 0 8px 8px;
+  width: 100%;
 }
 
 .calendar-day-header {
@@ -39,12 +65,14 @@
   background-color: white;
   padding: 0.5rem;
   min-height: 100px;
+  width: 100%;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .calendar-day.weekend {
@@ -251,43 +279,21 @@
   margin-top: 1.5rem;
 }
 
-.calendar-container {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.months-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
-  gap: 2rem;
-  align-items: start;
-  width: 100%;
-}
-
-.month-view {
-  min-width: 600px;
-  width: 100%;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
 .event-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   width: 100%;
-  padding: 0 4px;
-}
-
-.event-description {
-  flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.event-description {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .delete-event-button {
