@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend, getDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend, getDay, addMonths, isBefore, isAfter } from 'date-fns';
 import './calendar.css';
 import EventModal from './EventModal';
 
@@ -17,70 +17,35 @@ interface ProcessedEvent extends Event {
   isEventMiddle: boolean;
 }
 
-interface CalendarProps {
-  startDate: Date;
-  endDate: Date;
-  onDateSelect?: (date: Date) => void;
+interface MonthViewProps {
+  monthDate: Date;
+  events: Event[];
+  onDateClick: (date: Date) => void;
+  onEventClick: (event: Event, e: React.MouseEvent) => void;
+  onDragStart: (event: React.DragEvent, eventItem: Event) => void;
+  onDragOver: (event: React.DragEvent, date: Date) => void;
+  onDragLeave: () => void;
+  onDrop: (event: React.DragEvent, date: Date) => void;
+  onDragEnd: (event: React.DragEvent) => void;
+  dragOverDate: Date | null;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect }) => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
-  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
-  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
-
-  const monthStart = startOfMonth(startDate);
-  const monthEnd = endOfMonth(startDate);
+const MonthView: React.FC<MonthViewProps> = ({
+  monthDate,
+  events,
+  onDateClick,
+  onEventClick,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  dragOverDate,
+}) => {
+  const monthStart = startOfMonth(monthDate);
+  const monthEnd = endOfMonth(monthDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const firstDayOfWeek = getDay(monthStart); // Get the day of week (0-6) for the first of the month
-
-  const isDateInRange = (date: Date) => {
-    return date >= startDate && date <= endDate;
-  };
-
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setSelectedEvent(undefined);
-    setIsModalOpen(true);
-    onDateSelect?.(date);
-  };
-
-  const handleEventClick = (event: Event, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the date click
-    setSelectedEvent(event);
-    setSelectedDate(event.date);
-    setIsModalOpen(true);
-  };
-
-  const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
-    const newEvent: Event = {
-      ...eventData,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setEvents([...events, newEvent]);
-  };
-
-  const handleEditEvent = (updatedEvent: Event) => {
-    setEvents(events.map(event => 
-      event.id === updatedEvent.id ? updatedEvent : event
-    ));
-  };
-
-  const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
-    let currentDate = new Date(startDate);
-    let remainingDays = businessDays - (isWeekend(startDate) ? 0 : 1);
-
-    while (remainingDays > 0) {
-      currentDate = addDays(currentDate, 1);
-      if (!isWeekend(currentDate)) {
-        remainingDays--;
-      }
-    }
-
-    return currentDate;
-  };
+  const firstDayOfWeek = getDay(monthStart);
 
   const processAllEvents = (events: Event[], daysInMonth: Date[]): Map<string, ProcessedEvent[]> => {
     const processedEventsMap = new Map<string, ProcessedEvent[]>();
@@ -146,13 +111,129 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
         });
       }
     });
-    
 
     return processedEventsMap;
   };
 
-  // Process all events once
+  const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
+    let currentDate = new Date(startDate);
+    let remainingDays = businessDays - (isWeekend(startDate) ? 0 : 1);
+
+    while (remainingDays > 0) {
+      currentDate = addDays(currentDate, 1);
+      if (!isWeekend(currentDate)) {
+        remainingDays--;
+      }
+    }
+
+    return currentDate;
+  };
+
   const processedEventsMap = processAllEvents(events, daysInMonth);
+
+  return (
+    <div className="month-view">
+      <div className="calendar-header">
+        <h2>{format(monthDate, 'MMMM yyyy')}</h2>
+      </div>
+      <div className="calendar-grid">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: string) => (
+          <div key={day} className="calendar-day-header">
+            {day}
+          </div>
+        ))}
+        {Array.from({ length: firstDayOfWeek }).map((_, index) => (
+          <div key={`empty-${index}`} className="calendar-day empty"></div>
+        ))}
+        {daysInMonth.map((day: Date) => {
+          const dayKey = format(day, 'yyyy-MM-dd');
+          const dayEvents = processedEventsMap.get(dayKey) || [];
+          const isDragOver = dragOverDate && isSameDay(day, dragOverDate);
+          return (
+            <div
+              key={day.toString()}
+              className={`calendar-day ${
+                isSameDay(day, new Date()) ? 'selected' : ''
+              } ${!isSameMonth(day, monthDate) ? 'other-month' : ''} ${
+                isDragOver ? 'drag-over' : ''
+              } ${isWeekend(day) ? 'weekend' : ''}`}
+              onClick={() => onDateClick(day)}
+              onDragOver={(e) => onDragOver(e, day)}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, day)}
+            >
+              <span className="day-number">{format(day, 'd')}</span>
+              <div className="day-events">
+                {dayEvents.map(event => (
+                  event ? (
+                    <div
+                      key={event.id}
+                      className={`event-item ${event.isEventStart ? 'event-start' : ''} ${
+                        event.isEventEnd ? 'event-end' : ''
+                      } ${event.isEventMiddle ? 'event-middle' : ''} ${
+                        isWeekend(day) ? 'weekend-event' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, event)}
+                      onDragEnd={onDragEnd}
+                      onClick={(e) => onEventClick(event, e)}
+                    >
+                      {event.isEventStart && event.description}
+                    </div>
+                  ) : (
+                    <div className="event-item empty"></div>
+                  )
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+interface CalendarProps {
+  startDate: Date;
+  endDate: Date;
+  onDateSelect?: (date: Date) => void;
+}
+
+const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect }) => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
+  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedEvent(undefined);
+    setIsModalOpen(true);
+    onDateSelect?.(date);
+  };
+
+  const handleEventClick = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEvent(event);
+    setSelectedDate(event.date);
+    setIsModalOpen(true);
+  };
+
+  const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
+    const newEvent: Event = {
+      ...eventData,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    setEvents([...events, newEvent]);
+  };
+
+  const handleEditEvent = (updatedEvent: Event) => {
+    setEvents(events.map(event => 
+      event.id === updatedEvent.id ? updatedEvent : event
+    ));
+  };
 
   const handleDragStart = (event: React.DragEvent, eventItem: Event) => {
     setDraggedEvent(eventItem);
@@ -193,64 +274,34 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     setDragOverDate(null);
   };
 
+  // Calculate the months to display
+  const monthsToDisplay: Date[] = [];
+  let currentMonth = startOfMonth(startDate);
+  const lastMonth = startOfMonth(endDate);
+
+  while (!isAfter(currentMonth, lastMonth)) {
+    monthsToDisplay.push(currentMonth);
+    currentMonth = addMonths(currentMonth, 1);
+  }
+
   return (
-    <div className="calendar">
-      <div className="calendar-header">
-        <h2>{format(startDate, 'MMMM yyyy')}</h2>
-      </div>
-      <div className="calendar-grid">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: string) => (
-          <div key={day} className="calendar-day-header">
-            {day}
-          </div>
+    <div className="calendar-container">
+      <div className="months-grid">
+        {monthsToDisplay.map((monthDate) => (
+          <MonthView
+            key={monthDate.toString()}
+            monthDate={monthDate}
+            events={events}
+            onDateClick={handleDateClick}
+            onEventClick={handleEventClick}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onDragEnd={handleDragEnd}
+            dragOverDate={dragOverDate}
+          />
         ))}
-        {/* Add empty cells for days before the first of the month */}
-        {Array.from({ length: firstDayOfWeek }).map((_, index) => (
-          <div key={`empty-${index}`} className="calendar-day empty"></div>
-        ))}
-        {daysInMonth.map((day: Date) => {
-          const dayKey = format(day, 'yyyy-MM-dd');
-          const dayEvents = processedEventsMap.get(dayKey) || [];
-          const isDragOver = dragOverDate && isSameDay(day, dragOverDate);
-          return (
-            <div
-              key={day.toString()}
-              className={`calendar-day ${
-                isSameDay(day, new Date()) ? 'selected' : ''
-              } ${!isSameMonth(day, startDate) ? 'other-month' : ''} ${
-                isDragOver ? 'drag-over' : ''
-              } ${isWeekend(day) ? 'weekend' : ''}`}
-              onClick={() => handleDateClick(day)}
-              onDragOver={(e) => handleDragOver(e, day)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, day)}
-            >
-              <span className="day-number">{format(day, 'd')}</span>
-              <div className="day-events">
-                {dayEvents.map(event => (
-                  event ? (
-                    <div
-                      key={event.id}
-                      className={`event-item ${event.isEventStart ? 'event-start' : ''} ${
-                        event.isEventEnd ? 'event-end' : ''
-                      } ${event.isEventMiddle ? 'event-middle' : ''} ${
-                        isWeekend(day) ? 'weekend-event' : ''
-                      }`}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, event)}
-                      onDragEnd={handleDragEnd}
-                      onClick={(e) => handleEventClick(event, e)}
-                    >
-                      {event.isEventStart && event.description}
-                    </div>
-                  ) : (
-                    <div className="event-item empty"></div>
-                  )
-                ))}
-              </div>
-            </div>
-          );
-        })}
       </div>
       {selectedDate && (
         <EventModal
