@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays, isWeekend, getDay } from 'date-fns';
 import './calendar.css';
 import EventModal from './EventModal';
 
@@ -27,6 +27,7 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
   const monthStart = startOfMonth(startDate);
   const monthEnd = endOfMonth(startDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const firstDayOfWeek = getDay(monthStart); // Get the day of week (0-6) for the first of the month
 
   const isDateInRange = (date: Date) => {
     return date >= startDate && date <= endDate;
@@ -62,7 +63,7 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
 
   const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
     let currentDate = new Date(startDate);
-    let remainingDays = businessDays;
+    let remainingDays = businessDays - (isWeekend(startDate) ? 0 : 1);
 
     while (remainingDays > 0) {
       currentDate = addDays(currentDate, 1);
@@ -131,6 +132,10 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
           <div key={day} className="calendar-day-header">
             {day}
           </div>
+        ))}
+        {/* Add empty cells for days before the first of the month */}
+        {Array.from({ length: firstDayOfWeek }).map((_, index) => (
+          <div key={`empty-${index}`} className="calendar-day empty"></div>
         ))}
         {daysInMonth.map((day: Date) => {
           const dayEvents = getEventsForDate(day);
