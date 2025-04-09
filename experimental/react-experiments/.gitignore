@@ -1,2 +1,4 @@
 node_modules
 *.db
+dist/frontend/
+dist/backend/
