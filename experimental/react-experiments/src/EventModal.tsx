@@ -74,6 +74,7 @@ const EventModal: React.FC<EventModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter event description"
+              autoFocus
               required
             />
           </div>
