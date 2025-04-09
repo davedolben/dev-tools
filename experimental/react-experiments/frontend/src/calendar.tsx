@@ -87,7 +87,11 @@ const MonthView: React.FC<MonthViewProps> = ({
                       onDragEnd={onDragEnd}
                       onClick={(e) => onEventClick(event, e)}
                     >
-                      {event.isEventStart && event.description}
+                      {event.isEventStart && (
+                        <div className="event-content">
+                          <span className="event-description">{event.description}</span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="event-item empty"></div>
@@ -109,6 +113,7 @@ interface CalendarProps {
   onDateSelect?: (date: Date) => void;
   onAddEvent?: (eventData: Omit<Event, 'id'>) => void;
   onEditEvent?: (updatedEvent: Event) => void;
+  onDeleteEvent?: (eventId: string) => void;
   onEventClick?: (event: Event, e: React.MouseEvent) => void;
   onDrop?: (eventId: string, newDate: Date) => void;
 }
@@ -120,6 +125,7 @@ const Calendar: React.FC<CalendarProps> = ({
   onDateSelect,
   onAddEvent,
   onEditEvent,
+  onDeleteEvent,
   onEventClick,
   onDrop
 }) => {
@@ -313,6 +319,7 @@ const Calendar: React.FC<CalendarProps> = ({
           selectedDate={selectedDate}
           onAddEvent={handleAddEvent}
           onEditEvent={handleEditEvent}
+          onDeleteEvent={onDeleteEvent}
           existingEvent={selectedEvent}
         />
       )}

@@ -89,3 +89,10 @@ export async function updateEvent(eventId: number, event: Partial<APIEvent>): Pr
   if (!response.ok) throw new Error('Failed to update event');
   return response.json();
 }
+
+export async function deleteEvent(eventId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/calendars/events/${eventId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete event');
+}

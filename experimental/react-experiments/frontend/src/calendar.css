@@ -201,12 +201,6 @@
   font-size: 1rem;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
 .btn-primary,
 .btn-secondary {
   padding: 0.5rem 1rem;
@@ -235,6 +229,28 @@
   background-color: #545b62;
 }
 
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 .calendar-container {
   width: 100%;
   max-width: 100%;
@@ -257,4 +273,38 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+.event-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 4px;
+}
+
+.event-description {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-event-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  padding: 0 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.event-item:hover .delete-event-button {
+  opacity: 1;
+}
+
+.delete-event-button:hover {
+  color: #ff4444;
 } 

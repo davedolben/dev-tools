@@ -14,6 +14,7 @@ interface EventModalProps {
   selectedDate: Date;
   onAddEvent: (event: Omit<Event, 'id'>) => void;
   onEditEvent?: (event: Event) => void;
+  onDeleteEvent?: (eventId: string) => void;
   existingEvent?: Event;
 }
 
@@ -23,6 +24,7 @@ const EventModal: React.FC<EventModalProps> = ({
   selectedDate, 
   onAddEvent,
   onEditEvent,
+  onDeleteEvent,
   existingEvent 
 }) => {
   const [description, setDescription] = useState(existingEvent?.description || '');
@@ -59,6 +61,13 @@ const EventModal: React.FC<EventModalProps> = ({
     }
   };
 
+  const handleDelete = () => {
+    if (existingEvent && onDeleteEvent) {
+      onDeleteEvent(existingEvent.id);
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -90,6 +99,15 @@ const EventModal: React.FC<EventModalProps> = ({
             />
           </div>
           <div className="modal-actions">
+            {existingEvent && onDeleteEvent && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="btn-danger"
+              >
+                Delete Event
+              </button>
+            )}
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
             </button>

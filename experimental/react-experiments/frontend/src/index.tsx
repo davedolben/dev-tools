@@ -10,6 +10,7 @@ import {
   getCalendarEvents,
   createEvent,
   updateEvent,
+  deleteEvent,
   apiEventToFrontendEvent,
   frontendEventToApiEvent,
   Event,
@@ -144,6 +145,16 @@ const CalendarPage = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteEvent(parseInt(eventId));
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (err) {
+      setError('Failed to delete event');
+      console.error(err);
+    }
+  };
+
   const handleDrop = async (eventId: string, newDate: Date) => {
     try {
       const event = events.find(e => e.id === eventId);
@@ -178,6 +189,7 @@ const CalendarPage = () => {
         events={events}
         onAddEvent={handleAddEvent}
         onEditEvent={handleEditEvent}
+        onDeleteEvent={handleDeleteEvent}
         onDrop={handleDrop}
       />
     </>

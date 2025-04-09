@@ -72,6 +72,7 @@ func SetupRoutes(r *gin.Engine) {
 		calendarGroup.GET("/:id/events", GetCalendarEvents)
 		calendarGroup.POST("/:id/events", CreateEvent)
 		calendarGroup.PUT("/events/:eventId", UpdateEvent)
+		calendarGroup.DELETE("/events/:eventId", DeleteEvent)
 	}
 }
 
@@ -233,4 +234,29 @@ func UpdateEvent(c *gin.Context) {
 
 	event.ID, _ = strconv.ParseInt(eventID, 10, 64)
 	c.JSON(http.StatusOK, event)
+}
+
+func DeleteEvent(c *gin.Context) {
+	eventID := c.Param("eventId")
+
+	// Verify event exists
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM events WHERE id = ?)", eventID).Scan(&exists)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify event"})
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Event not found"})
+		return
+	}
+
+	// Delete the event
+	_, err = db.Exec("DELETE FROM events WHERE id = ?", eventID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete event"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
