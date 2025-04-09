@@ -36,7 +36,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Main />} />
-            <Route path="/calendar" element={<Calendar startDate={new Date()} endDate={addDays(new Date(), 30)} />} />
+            <Route path="/calendar" element={<Calendar startDate={new Date()} endDate={addDays(new Date(), 60)} />} />
           </Route>
         </Routes>
       </BrowserRouter>
