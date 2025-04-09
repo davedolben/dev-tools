@@ -19,7 +19,7 @@ interface ProcessedEvent extends Event {
 
 interface MonthViewProps {
   monthDate: Date;
-  events: Event[];
+  processedEventsMap: Map<string, ProcessedEvent[]>;
   onDateClick: (date: Date) => void;
   onEventClick: (event: Event, e: React.MouseEvent) => void;
   onDragStart: (event: React.DragEvent, eventItem: Event) => void;
@@ -32,7 +32,7 @@ interface MonthViewProps {
 
 const MonthView: React.FC<MonthViewProps> = ({
   monthDate,
-  events,
+  processedEventsMap,
   onDateClick,
   onEventClick,
   onDragStart,
@@ -46,90 +46,6 @@ const MonthView: React.FC<MonthViewProps> = ({
   const monthEnd = endOfMonth(monthDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstDayOfWeek = getDay(monthStart);
-
-  const processAllEvents = (events: Event[], daysInMonth: Date[]): Map<string, ProcessedEvent[]> => {
-    const processedEventsMap = new Map<string, ProcessedEvent[]>();
-    const firstDayIndices = new Map<string, number>();
-
-    // Initialize the map with empty arrays for all days
-    daysInMonth.forEach(day => {
-      processedEventsMap.set(format(day, 'yyyy-MM-dd'), []);
-    });
-
-    // Sort events by start date
-    events.sort((a, b) => {
-      if (isSameDay(a.date, b.date)) {
-        // Sort descending by length
-        return b.length - a.length;
-      }
-      return a.date.getTime() - b.date.getTime();
-    });
-
-    // Process each event
-    events.forEach(event => {
-      const eventStart = event.date;
-      const eventEnd = calculateBusinessDaysEndDate(eventStart, event.length);
-      
-      // Get all days this event spans
-      const eventDays = eachDayOfInterval({ start: eventStart, end: eventEnd });
-      
-      eventDays.forEach(day => {
-        const dayKey = format(day, 'yyyy-MM-dd');
-        if (processedEventsMap.has(dayKey)) {
-          const processedEvent: ProcessedEvent = {
-            ...event,
-            endDate: eventEnd,
-            isEventStart: isSameDay(eventStart, day),
-            isEventEnd: isSameDay(eventEnd, day),
-            isEventMiddle: !isSameDay(eventStart, day) && !isSameDay(eventEnd, day)
-          };
-          processedEventsMap.get(dayKey)?.push(processedEvent);
-        }
-      });
-    });
-
-    daysInMonth.forEach(day => {
-      const dayKey = format(day, 'yyyy-MM-dd');
-      if (processedEventsMap.has(dayKey)) {
-        const dayEvents = processedEventsMap.get(dayKey)!;
-        let index = 0;
-        while (index < dayEvents.length) {
-          const event = dayEvents[index];
-          if (firstDayIndices.has(event.id)) {
-            const wantIndex = firstDayIndices.get(event.id)!;
-            if (index !== wantIndex) {
-              dayEvents.splice(index, 0, ...Array(wantIndex - index).fill(null));
-              index = wantIndex;
-            }
-          }
-          index++;
-        }
-        dayEvents.forEach(event => {
-          if (event && event.isEventStart) {
-            firstDayIndices.set(event.id, dayEvents.indexOf(event));
-          }
-        });
-      }
-    });
-
-    return processedEventsMap;
-  };
-
-  const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
-    let currentDate = new Date(startDate);
-    let remainingDays = businessDays - (isWeekend(startDate) ? 0 : 1);
-
-    while (remainingDays > 0) {
-      currentDate = addDays(currentDate, 1);
-      if (!isWeekend(currentDate)) {
-        remainingDays--;
-      }
-    }
-
-    return currentDate;
-  };
-
-  const processedEventsMap = processAllEvents(events, daysInMonth);
 
   return (
     <div className="month-view">
@@ -235,6 +151,91 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     ));
   };
 
+  const calculateBusinessDaysEndDate = (startDate: Date, businessDays: number): Date => {
+    let currentDate = new Date(startDate);
+    let remainingDays = businessDays - (isWeekend(startDate) ? 0 : 1);
+
+    while (remainingDays > 0) {
+      currentDate = addDays(currentDate, 1);
+      if (!isWeekend(currentDate)) {
+        remainingDays--;
+      }
+    }
+
+    return currentDate;
+  };
+
+  const processAllEvents = (events: Event[], startDate: Date, endDate: Date): Map<string, ProcessedEvent[]> => {
+    const processedEventsMap = new Map<string, ProcessedEvent[]>();
+    const firstDayIndices = new Map<string, number>();
+
+    // Get all days in the date range
+    const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    // Initialize the map with empty arrays for all days
+    allDays.forEach(day => {
+      processedEventsMap.set(format(day, 'yyyy-MM-dd'), []);
+    });
+
+    // Sort events by start date
+    events.sort((a, b) => {
+      if (isSameDay(a.date, b.date)) {
+        // Sort descending by length
+        return b.length - a.length;
+      }
+      return a.date.getTime() - b.date.getTime();
+    });
+
+    // Process each event
+    events.forEach(event => {
+      const eventStart = event.date;
+      const eventEnd = calculateBusinessDaysEndDate(eventStart, event.length);
+      
+      // Get all days this event spans
+      const eventDays = eachDayOfInterval({ start: eventStart, end: eventEnd });
+      
+      eventDays.forEach(day => {
+        const dayKey = format(day, 'yyyy-MM-dd');
+        if (processedEventsMap.has(dayKey)) {
+          const processedEvent: ProcessedEvent = {
+            ...event,
+            endDate: eventEnd,
+            isEventStart: isSameDay(eventStart, day),
+            isEventEnd: isSameDay(eventEnd, day),
+            isEventMiddle: !isSameDay(eventStart, day) && !isSameDay(eventEnd, day)
+          };
+          processedEventsMap.get(dayKey)?.push(processedEvent);
+        }
+      });
+    });
+
+    allDays.forEach(day => {
+      const dayKey = format(day, 'yyyy-MM-dd');
+      if (processedEventsMap.has(dayKey)) {
+        const dayEvents = processedEventsMap.get(dayKey)!;
+        let index = 0;
+        while (index < dayEvents.length) {
+          const event = dayEvents[index];
+          if (firstDayIndices.has(event.id)) {
+            const wantIndex = firstDayIndices.get(event.id)!;
+            if (index !== wantIndex) {
+              dayEvents.splice(index, 0, ...Array(wantIndex - index).fill(null));
+              index = wantIndex;
+            }
+          }
+          index++;
+        }
+        dayEvents.forEach(event => {
+          if (event && event.isEventStart) {
+            firstDayIndices.set(event.id, dayEvents.indexOf(event));
+          }
+        });
+      }
+    });
+
+    return processedEventsMap;
+  };
+
   const handleDragStart = (event: React.DragEvent, eventItem: Event) => {
     setDraggedEvent(eventItem);
     event.dataTransfer.setData('text/plain', eventItem.id);
@@ -284,6 +285,9 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
     currentMonth = addMonths(currentMonth, 1);
   }
 
+  // Process all events for the entire date range
+  const processedEventsMap = processAllEvents(events, startDate, endDate);
+
   return (
     <div className="calendar-container">
       <div className="months-grid">
@@ -291,7 +295,7 @@ const Calendar: React.FC<CalendarProps> = ({ startDate, endDate, onDateSelect })
           <MonthView
             key={monthDate.toString()}
             monthDate={monthDate}
-            events={events}
+            processedEventsMap={processedEventsMap}
             onDateClick={handleDateClick}
             onEventClick={handleEventClick}
             onDragStart={handleDragStart}
