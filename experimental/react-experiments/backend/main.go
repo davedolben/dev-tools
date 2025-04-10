@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	"path"
+	"slices"
 
 	"github.com/davedolben/dev-tools/experimental/react-experiments/calendar"
 	"github.com/gin-contrib/static"
@@ -30,6 +33,13 @@ func main() {
 	if *fStaticDir != "" {
 		r.Use(static.Serve("/", static.LocalFile(*fStaticDir, false)))
 	}
+
+	// Set up redirection middleware to serve index.html for specific routes
+	r.Use(func(c *gin.Context) {
+		if slices.Contains([]string{"/calendar"}, c.Request.URL.Path) {
+			http.ServeFile(c.Writer, c.Request, path.Join(*fStaticDir, "index.html"))
+		}
+	})
 
 	// Start server
 	host := fmt.Sprintf(":%d", *fPort)
