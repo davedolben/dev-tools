@@ -4,8 +4,9 @@ import './calendar-sidebar.css';
 
 interface CalendarSidebarProps {
   calendars: Calendar[];
-  selectedCalendarId: number | null;
-  onSelectCalendar: (calendarId: number) => void;
+  activeCalendars: number[];
+  lastActiveCalendarId: number | null;
+  onToggleCalendar: (calendarId: number) => void;
   onCreateCalendar: (name: string, description: string) => void;
   isOpen: boolean;
   toggleSidebar: () => void;
@@ -13,8 +14,9 @@ interface CalendarSidebarProps {
 
 const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   calendars,
-  selectedCalendarId,
-  onSelectCalendar,
+  activeCalendars,
+  lastActiveCalendarId,
+  onToggleCalendar,
   onCreateCalendar,
   isOpen,
   toggleSidebar
@@ -44,10 +46,31 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
           {calendars.map(calendar => (
             <li 
               key={calendar.id}
-              className={selectedCalendarId === calendar.id ? 'selected' : ''}
-              onClick={() => onSelectCalendar(calendar.id)}
+              className={`
+                ${activeCalendars.includes(calendar.id) ? 'active' : ''}
+                ${lastActiveCalendarId === calendar.id ? 'last-active' : ''}
+              `}
+              onClick={() => onToggleCalendar(calendar.id)}
+              style={{ 
+                borderLeft: activeCalendars.includes(calendar.id) 
+                  ? `4px solid ${calendar.color || '#cccccc'}` 
+                  : '4px solid transparent' 
+              }}
             >
-              {calendar.name}
+              <div 
+                className="calendar-color-indicator" 
+                style={{ backgroundColor: calendar.color || '#cccccc' }}
+              ></div>
+              <input 
+                type="checkbox" 
+                checked={activeCalendars.includes(calendar.id)}
+                onChange={() => onToggleCalendar(calendar.id)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <span>{calendar.name}</span>
+              {lastActiveCalendarId === calendar.id && (
+                <span className="active-indicator">✓</span>
+              )}
             </li>
           ))}
         </ul>

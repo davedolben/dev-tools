@@ -126,22 +126,16 @@
 }
 
 .event-item {
-  background-color: #007bff;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  margin: 0.25rem 0;
-  font-size: 0.8rem;
-  white-space: nowrap;
+  margin: 2px 0;
+  padding: 3px;
   overflow: hidden;
+  cursor: pointer;
+  white-space: nowrap;
   text-overflow: ellipsis;
-  cursor: grab;
-  user-select: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-left: -0.5rem;
-  width: calc(100%);
+  transition: all 0.2s ease-in-out;
+  border-radius: 3px;
+  background-color: var(--event-color, #007bff);
+  color: white;
 }
 
 .event-item:active {

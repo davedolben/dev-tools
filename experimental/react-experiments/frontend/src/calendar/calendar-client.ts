@@ -3,6 +3,8 @@ export interface Event {
   date: Date;
   description: string;
   length: number; // Number of days the event spans
+  calendarId: number;
+  color?: string;
 }
 
 // API types
@@ -10,6 +12,7 @@ export interface Calendar {
   id: number;
   name: string;
   description: string;
+  color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -28,12 +31,14 @@ export interface APIEvent {
 const API_BASE_URL = '/api';
 
 // Helper function to convert API event to frontend event
-export function apiEventToFrontendEvent(apiEvent: APIEvent): Event {
+export function apiEventToFrontendEvent(apiEvent: APIEvent, calendarColor?: string): Event {
   return {
     id: apiEvent.id.toString(),
     description: apiEvent.title,
     date: new Date(apiEvent.start_time),
     length: apiEvent.length,
+    calendarId: apiEvent.calendar_id,
+    color: calendarColor
   };
 }
 
@@ -54,11 +59,11 @@ export async function getCalendars(): Promise<Calendar[]> {
   return response.json();
 }
 
-export async function createCalendar(name: string, description: string): Promise<Calendar> {
+export async function createCalendar(name: string, description: string, color?: string): Promise<Calendar> {
   const response = await fetch(`${API_BASE_URL}/calendars`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, description }),
+    body: JSON.stringify({ name, description, color }),
   });
   if (!response.ok) throw new Error('Failed to create calendar');
   return response.json();

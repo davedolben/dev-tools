@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-
-interface Event {
-  id: string;
-  date: Date;
-  description: string;
-  length: number;
-}
+import { Event } from './calendar-client';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -16,6 +10,7 @@ interface EventModalProps {
   onEditEvent?: (event: Event) => void;
   onDeleteEvent?: (eventId: string) => void;
   existingEvent?: Event;
+  activeCalendarId: number;
 }
 
 const EventModal: React.FC<EventModalProps> = ({ 
@@ -25,7 +20,8 @@ const EventModal: React.FC<EventModalProps> = ({
   onAddEvent,
   onEditEvent,
   onDeleteEvent,
-  existingEvent 
+  existingEvent,
+  activeCalendarId
 }) => {
   const [description, setDescription] = useState(existingEvent?.description || '');
   const [length, setLength] = useState(existingEvent?.length || 1);
@@ -54,7 +50,8 @@ const EventModal: React.FC<EventModalProps> = ({
         onAddEvent({
           date: selectedDate,
           description: description.trim(),
-          length: length
+          length: length,
+          calendarId: activeCalendarId
         });
       }
       onClose();

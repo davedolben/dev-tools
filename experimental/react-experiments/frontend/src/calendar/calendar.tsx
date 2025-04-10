@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import './calendar.css';
 import EventModal from './EventModal';
 import { Event } from './calendar-client';
+
 interface ProcessedEvent extends Event {
   endDate: Date;
   isEventStart: boolean;
@@ -82,6 +83,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                       } ${event.isEventMiddle ? 'event-middle' : ''} ${
                         isWeekend(day) ? 'weekend-event' : ''
                       }`}
+                      style={event.color ? { '--event-color': event.color } as React.CSSProperties : undefined}
                       draggable
                       onDragStart={(e) => onDragStart(e, event)}
                       onDragEnd={onDragEnd}
@@ -116,6 +118,7 @@ interface CalendarProps {
   onDeleteEvent?: (eventId: string) => void;
   onEventClick?: (event: Event, e: React.MouseEvent) => void;
   onDrop?: (eventId: string, newDate: Date) => void;
+  lastActiveCalendarId?: number;
 }
 
 const Calendar: React.FC<CalendarProps> = ({ 
@@ -127,7 +130,8 @@ const Calendar: React.FC<CalendarProps> = ({
   onEditEvent,
   onDeleteEvent,
   onEventClick,
-  onDrop
+  onDrop,
+  lastActiveCalendarId = 1
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -151,6 +155,8 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const handleAddEvent = (eventData: Omit<Event, 'id'>) => {
+    // If the eventData doesn't have a calendarId, 
+    // the parent component is responsible for adding it
     onAddEvent?.(eventData);
   };
 
@@ -295,7 +301,7 @@ const Calendar: React.FC<CalendarProps> = ({
       <div className="months-grid">
         {monthsToDisplay.map((monthDate) => (
           <MonthView
-            key={monthDate.toString()}
+            key={format(monthDate, 'yyyy-MM')}
             monthDate={monthDate}
             processedEventsMap={processedEventsMap}
             onDateClick={handleDateClick}
@@ -309,18 +315,16 @@ const Calendar: React.FC<CalendarProps> = ({
           />
         ))}
       </div>
-      {selectedDate && (
+      {isModalOpen && selectedDate && (
         <EventModal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedEvent(undefined);
-          }}
+          onClose={() => setIsModalOpen(false)}
           selectedDate={selectedDate}
           onAddEvent={handleAddEvent}
           onEditEvent={handleEditEvent}
           onDeleteEvent={onDeleteEvent}
           existingEvent={selectedEvent}
+          activeCalendarId={lastActiveCalendarId}
         />
       )}
     </div>

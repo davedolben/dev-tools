@@ -4,9 +4,45 @@ import Calendar from './calendar';
 import { getCalendars, createCalendar, getCalendarEvents, createEvent, updateEvent, deleteEvent, apiEventToFrontendEvent, frontendEventToApiEvent, Event, APIEvent, Calendar as CalendarType } from './calendar-client';
 import CalendarSidebar from './CalendarSidebar';
 
+// Array of predefined colors for calendars
+const CALENDAR_COLORS = [
+  '#4285F4', // Blue
+  '#EA4335', // Red
+  '#FBBC05', // Yellow
+  '#34A853', // Green
+  '#8E24AA', // Purple
+  '#F6BF26', // Gold
+  '#0B8043', // Dark Green
+  '#D50000', // Bright Red
+  '#3F51B5', // Indigo
+  '#039BE5', // Light Blue
+];
+
+// Keep track of which colors have been used
+const getAvailableColor = (usedColors: string[]) => {
+  // Filter out colors that are already in use
+  const availableColors = CALENDAR_COLORS.filter(color => !usedColors.includes(color));
+  
+  // If all colors are used, cycle through them by picking the least used one
+  if (availableColors.length === 0) {
+    // Count occurrences of each color
+    const colorCounts = CALENDAR_COLORS.reduce((counts, color) => {
+      counts[color] = usedColors.filter(c => c === color).length;
+      return counts;
+    }, {} as Record<string, number>);
+    
+    // Find the color with the lowest count
+    return Object.entries(colorCounts).sort((a, b) => a[1] - b[1])[0][0];
+  }
+  
+  // Return a random available color
+  return availableColors[Math.floor(Math.random() * availableColors.length)];
+};
+
 const CalendarPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [calendarId, setCalendarId] = useState<number | null>(null);
+  const [activeCalendars, setActiveCalendars] = useState<number[]>([]);
+  const [lastActiveCalendarId, setLastActiveCalendarId] = useState<number | null>(null);
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -41,14 +77,31 @@ const CalendarPage = () => {
         // Get all calendars
         const fetchedCalendars = await getCalendars();
         
-        // If no calendars exist, create one
+        // If no calendars exist, create one with a random color
         if (!fetchedCalendars || fetchedCalendars.length === 0) {
-          const newCalendar = await createCalendar('My Calendar', 'A calendar for my events');
+          const newCalendar = await createCalendar('My Calendar', 'A calendar for my events', CALENDAR_COLORS[0]);
           setCalendars([newCalendar]);
-          setCalendarId(newCalendar.id);
+          setActiveCalendars([newCalendar.id]);
+          setLastActiveCalendarId(newCalendar.id);
         } else {
-          setCalendars(fetchedCalendars);
-          setCalendarId(fetchedCalendars[0].id);
+          // Check for calendars without colors and assign unique ones
+          const usedColors = fetchedCalendars
+            .filter(cal => cal.color)
+            .map(cal => cal.color as string);
+            
+          const calendarsWithColors = fetchedCalendars.map(cal => {
+            if (!cal.color) {
+              return { ...cal, color: getAvailableColor(usedColors) };
+            }
+            return cal;
+          });
+          
+          setCalendars(calendarsWithColors);
+          // Activate all calendars by default
+          const allCalendarIds = calendarsWithColors.map(cal => cal.id);
+          setActiveCalendars(allCalendarIds);
+          // Set the first calendar as the last active one
+          setLastActiveCalendarId(calendarsWithColors[0].id);
         }
       } catch (err) {
         setError('Failed to fetch calendars');
@@ -60,48 +113,139 @@ const CalendarPage = () => {
   }, []);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      if (!calendarId) return;
+    const fetchAllEvents = async () => {
+      if (activeCalendars.length === 0) {
+        setEvents([]);
+        return;
+      }
       
       try {
-        const apiEvents = (await getCalendarEvents(calendarId) ?? []);
-        const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
-        setEvents(frontendEvents);
+        // Fetch events from all active calendars
+        const allEvents: Event[] = [];
+        
+        for (const calendarId of activeCalendars) {
+          const calendar = calendars.find(cal => cal.id === calendarId);
+          if (!calendar) continue;
+          
+          const apiEvents = await getCalendarEvents(calendarId) || [];
+          const calendarEvents = apiEvents.map(apiEvent => 
+            apiEventToFrontendEvent(apiEvent, calendar.color)
+          );
+          
+          allEvents.push(...calendarEvents);
+        }
+        
+        setEvents(allEvents);
       } catch (err) {
         setError('Failed to fetch events');
         console.error(err);
       }
     };
 
-    fetchEvents();
-  }, [calendarId]);
+    fetchAllEvents();
+  }, [activeCalendars, calendars]);
+
+  const handleToggleCalendar = (calendarId: number) => {
+    setActiveCalendars(prevActiveCalendars => {
+      if (prevActiveCalendars.includes(calendarId)) {
+        // Prevent deactivating the last calendar
+        if (prevActiveCalendars.length === 1) {
+          return prevActiveCalendars;
+        }
+        
+        // If we're deactivating the last active calendar, set a new one
+        if (lastActiveCalendarId === calendarId) {
+          // Find another active calendar to set as last active
+          const remainingCalendars = prevActiveCalendars.filter(id => id !== calendarId);
+          // Set the first remaining active calendar as the last active
+          if (remainingCalendars.length > 0) {
+            setLastActiveCalendarId(remainingCalendars[0]);
+          }
+        }
+        
+        return prevActiveCalendars.filter(id => id !== calendarId);
+      } else {
+        // If activating a calendar, set it as the last active
+        setLastActiveCalendarId(calendarId);
+        return [...prevActiveCalendars, calendarId];
+      }
+    });
+  };
 
   const handleAddEvent = async (eventData: { description: string; date: Date; length: number }) => {
-    if (!calendarId) return;
+    // Find a valid calendar ID to use
+    let targetCalendarId = lastActiveCalendarId;
+    
+    if (!targetCalendarId || !activeCalendars.includes(targetCalendarId)) {
+      if (activeCalendars.length > 0) {
+        // Use the first active calendar if the last active one isn't available
+        targetCalendarId = activeCalendars[0];
+        // Update the last active calendar ID
+        setLastActiveCalendarId(targetCalendarId);
+      } else {
+        setError('Cannot add event: No active calendars');
+        return;
+      }
+    }
 
     try {
-      const apiEvent = frontendEventToApiEvent({ ...eventData, id: 'temp' }, calendarId);
-      await createEvent(calendarId, apiEvent as Omit<APIEvent, 'id' | 'calendar_id' | 'created_at' | 'updated_at'>);
+      const apiEvent = frontendEventToApiEvent({ ...eventData, id: 'temp', calendarId: targetCalendarId }, targetCalendarId);
+      await createEvent(targetCalendarId, apiEvent as Omit<APIEvent, 'id' | 'calendar_id' | 'created_at' | 'updated_at'>);
       
-      // Refresh events for the selected calendar
-      const apiEvents = await getCalendarEvents(calendarId);
-      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
-      setEvents(frontendEvents);
+      // Refresh events
+      await refreshEvents();
     } catch (err) {
       setError('Failed to add event');
       console.error(err);
     }
   };
 
+  // Helper function to refresh events from all active calendars
+  const refreshEvents = async () => {
+    try {
+      const allEvents: Event[] = [];
+      
+      for (const calendarId of activeCalendars) {
+        const calendar = calendars.find(cal => cal.id === calendarId);
+        if (!calendar) continue;
+        
+        const apiEvents = await getCalendarEvents(calendarId) || [];
+        const calendarEvents = apiEvents.map(apiEvent => 
+          apiEventToFrontendEvent(apiEvent, calendar.color)
+        );
+        
+        allEvents.push(...calendarEvents);
+      }
+      
+      setEvents(allEvents);
+    } catch (err) {
+      console.error('Failed to refresh events', err);
+      throw err;
+    }
+  };
+
   const handleEditEvent = async (updatedEvent: Event) => {
     try {
-      const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
+      // Find a valid calendar ID to use
+      let targetCalendarId = updatedEvent.calendarId || lastActiveCalendarId;
+      
+      if (!targetCalendarId || !activeCalendars.includes(targetCalendarId)) {
+        if (activeCalendars.length > 0) {
+          // Use the first active calendar if needed
+          targetCalendarId = activeCalendars[0];
+          // Update the last active calendar ID
+          setLastActiveCalendarId(targetCalendarId);
+        } else {
+          setError('Cannot edit event: No active calendars');
+          return;
+        }
+      }
+      
+      const apiEvent = frontendEventToApiEvent(updatedEvent, targetCalendarId);
       await updateEvent(parseInt(updatedEvent.id), apiEvent);
       
-      // Refresh events for the selected calendar
-      const apiEvents = await getCalendarEvents(calendarId!);
-      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
-      setEvents(frontendEvents);
+      // Refresh events
+      await refreshEvents();
     } catch (err) {
       setError('Failed to update event');
       console.error(err);
@@ -112,10 +256,8 @@ const CalendarPage = () => {
     try {
       await deleteEvent(parseInt(eventId));
       
-      // Refresh events for the selected calendar
-      const apiEvents = await getCalendarEvents(calendarId!);
-      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
-      setEvents(frontendEvents);
+      // Refresh events
+      await refreshEvents();
     } catch (err) {
       setError('Failed to delete event');
       console.error(err);
@@ -128,13 +270,27 @@ const CalendarPage = () => {
       if (!event) return;
 
       const updatedEvent = { ...event, date: newDate };
-      const apiEvent = frontendEventToApiEvent(updatedEvent, calendarId!);
+      
+      // Find a valid calendar ID to use
+      let targetCalendarId = updatedEvent.calendarId || lastActiveCalendarId;
+      
+      if (!targetCalendarId || !activeCalendars.includes(targetCalendarId)) {
+        if (activeCalendars.length > 0) {
+          // Use the first active calendar if needed
+          targetCalendarId = activeCalendars[0];
+          // Update the last active calendar ID
+          setLastActiveCalendarId(targetCalendarId);
+        } else {
+          setError('Cannot update event: No active calendars');
+          return;
+        }
+      }
+      
+      const apiEvent = frontendEventToApiEvent(updatedEvent, targetCalendarId);
       await updateEvent(parseInt(eventId), apiEvent);
       
-      // Refresh events for the selected calendar
-      const apiEvents = await getCalendarEvents(calendarId!);
-      const frontendEvents = apiEvents.map(apiEventToFrontendEvent);
-      setEvents(frontendEvents);
+      // Refresh events
+      await refreshEvents();
     } catch (err) {
       setError('Failed to update event position');
       console.error(err);
@@ -143,11 +299,19 @@ const CalendarPage = () => {
 
   const handleCreateCalendar = async (name: string, description: string) => {
     try {
-      const newCalendar = await createCalendar(name, description);
+      // Get currently used colors from existing calendars
+      const usedColors = calendars
+        .filter(cal => cal.color)
+        .map(cal => cal.color as string);
+      
+      // Assign a unique color to the new calendar
+      const color = getAvailableColor(usedColors);
+      const newCalendar = await createCalendar(name, description, color);
       setCalendars([...calendars, newCalendar]);
       
-      // Automatically select the new calendar
-      setCalendarId(newCalendar.id);
+      // Automatically activate the new calendar and set as last active
+      setActiveCalendars(prev => [...prev, newCalendar.id]);
+      setLastActiveCalendarId(newCalendar.id);
     } catch (err) {
       setError('Failed to create calendar');
       console.error(err);
@@ -164,26 +328,27 @@ const CalendarPage = () => {
     return <div className="error-message">{error}</div>;
   }
 
-  const selectedCalendar = calendars.find(cal => cal.id === calendarId);
-
   return (
     <div className="calendar-app">
       <CalendarSidebar
         calendars={calendars}
-        selectedCalendarId={calendarId}
-        onSelectCalendar={setCalendarId}
+        activeCalendars={activeCalendars}
+        lastActiveCalendarId={lastActiveCalendarId}
+        onToggleCalendar={handleToggleCalendar}
         onCreateCalendar={handleCreateCalendar}
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
       />
 
       <div className={`calendar-container`}>
-        {selectedCalendar && (
-          <div className="calendar-header">
-            <h2>{selectedCalendar.name}</h2>
-            <p>{selectedCalendar.description}</p>
-          </div>
-        )}
+        <div className="calendar-header">
+          <h2>My Calendars</h2>
+          {activeCalendars.length > 0 && (
+            <p>
+              Showing {activeCalendars.length} calendar{activeCalendars.length > 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
 
         <Calendar 
           startDate={startDate}
@@ -193,6 +358,13 @@ const CalendarPage = () => {
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEvent}
           onDrop={handleDrop}
+          lastActiveCalendarId={
+            lastActiveCalendarId && activeCalendars.includes(lastActiveCalendarId) 
+              ? lastActiveCalendarId 
+              : activeCalendars.length > 0 
+                ? activeCalendars[0] 
+                : 1
+          }
         />
       </div>
     </div>
