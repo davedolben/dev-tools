@@ -16,6 +16,7 @@ type Calendar struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+	Color       string    `json:"color"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -46,6 +47,7 @@ func InitDB(dbPath string) error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
 			description TEXT,
+			color TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
@@ -61,7 +63,28 @@ func InitDB(dbPath string) error {
 			FOREIGN KEY (calendar_id) REFERENCES calendars(id)
 		);
 	`)
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	// Check if color column exists in calendars table, if not add it
+	_, err = db.Exec(`
+		SELECT color FROM calendars LIMIT 1
+	`)
+
+	if err != nil {
+		log.Println("Adding color column to calendars table")
+		// Column doesn't exist, add it
+		_, err = db.Exec(`
+			ALTER TABLE calendars ADD COLUMN color TEXT
+		`)
+		if err != nil {
+			return fmt.Errorf("error adding color column: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func SetupRoutes(r *gin.Engine) {
@@ -77,8 +100,9 @@ func SetupRoutes(r *gin.Engine) {
 }
 
 func GetCalendars(c *gin.Context) {
-	rows, err := db.Query("SELECT id, name, description, created_at, updated_at FROM calendars")
+	rows, err := db.Query("SELECT id, name, description, COALESCE(color, '#cccccc') as color, created_at, updated_at FROM calendars")
 	if err != nil {
+		log.Println("Failed to fetch calendars:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch calendars"})
 		return
 	}
@@ -87,8 +111,9 @@ func GetCalendars(c *gin.Context) {
 	var calendars []Calendar
 	for rows.Next() {
 		var cal Calendar
-		err := rows.Scan(&cal.ID, &cal.Name, &cal.Description, &cal.CreatedAt, &cal.UpdatedAt)
+		err := rows.Scan(&cal.ID, &cal.Name, &cal.Description, &cal.Color, &cal.CreatedAt, &cal.UpdatedAt)
 		if err != nil {
+			log.Println("Failed to scan calendar:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan calendar"})
 			return
 		}
@@ -144,9 +169,9 @@ func CreateCalendar(c *gin.Context) {
 	}
 
 	result, err := db.Exec(`
-		INSERT INTO calendars (name, description, created_at, updated_at)
-		VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, cal.Name, cal.Description)
+		INSERT INTO calendars (name, description, color, created_at, updated_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`, cal.Name, cal.Description, cal.Color)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create calendar"})
 		return
