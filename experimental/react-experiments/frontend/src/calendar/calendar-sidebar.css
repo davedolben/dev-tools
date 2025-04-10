@@ -1,0 +1,125 @@
+.calendar-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background-color: #f8f9fa;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  display: flex;
+}
+
+.calendar-sidebar.open {
+  transform: translateX(0);
+}
+
+.calendar-sidebar.closed {
+  transform: translateX(-280px);
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: -30px;
+  top: 20px;
+  width: 30px;
+  height: 30px;
+  background-color: #f8f9fa;
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-icon {
+  font-weight: bold;
+}
+
+.sidebar-content {
+  width: 240px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sidebar-content h3 {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.calendar-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.calendar-list li {
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.calendar-list li:hover {
+  background-color: #e9ecef;
+}
+
+.calendar-list li.selected {
+  background-color: #007bff;
+  color: white;
+}
+
+.add-calendar-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-calendar-btn:hover {
+  background-color: #0056b3;
+}
+
+.create-calendar-form {
+  margin-top: 15px;
+}
+
+.create-calendar-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.form-actions button:last-child {
+  margin-right: 0;
+  background-color: #6c757d;
+  color: white;
+}
+
+.form-actions button:first-child {
+  background-color: #007bff;
+  color: white;
+} 
