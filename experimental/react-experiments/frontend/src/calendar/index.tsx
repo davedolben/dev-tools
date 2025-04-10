@@ -45,7 +45,7 @@ const CalendarPage = () => {
   const [lastActiveCalendarId, setLastActiveCalendarId] = useState<number | null>(null);
   const [calendars, setCalendars] = useState<CalendarType[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const calculateDateRange = (events: Event[]): { startDate: Date; endDate: Date } => {
     if (events.length === 0) {
