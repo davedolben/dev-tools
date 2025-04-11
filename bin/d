@@ -26,6 +26,21 @@ check_for_script() {
   fi
 }
 
+search_for_command() {
+  local query_args=
+  if [ ! -z "$1" ]; then
+    query_args="-q $1"
+  fi
+
+  # TODO
+  # if fzf then
+  #ls -1 "${dfiles_dir}"
+  #exit 0
+  # fi
+
+  ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf $query_args --border --preview-window up --preview "cat ${dfiles_dir}/{}.sh"
+}
+
 if [ "$1" == "-v" ]; then
   shift
   verbose=true
@@ -38,25 +53,30 @@ if [ "$verbose" = true ]; then
   echo "Using $dfiles_dir"
 fi
 
+already_searched=
 command="$1"
 shift
-if [ -z "$command" ]; then
-  # TODO
-  # if fzf then
-  #ls -1 "${dfiles_dir}"
-  #exit 0
-  # fi
 
-  command="$(ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf --border --preview-window up --preview "cat ${dfiles_dir}/{}.sh")"
-  echo "> Running command '${command}'"
+if [ -z "$command" ]; then
+  command="$(search_for_command)"
+  already_searched=true
 fi
 
 full_path="$(check_for_script "${dfiles_dir}" ${command})"
+if [ -z "$full_path" ]; then
+  # If the command is not found and we didn't already do a search, trigger one with the input as a query
+  if [ -z "$already_searched" ]; then
+    command="$(search_for_command "$command")"
+    full_path="$(check_for_script "${dfiles_dir}" ${command})"
+  fi
+fi
+
 if [ -z "$full_path" ]; then
   echo "command not found"
   exit 1
 fi
 
+echo "> Running command '${command}'"
 if [ "$verbose" = true ]; then
   echo "Running: ${full_path} $@"
 fi
