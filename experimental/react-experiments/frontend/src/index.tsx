@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./style.css";
 import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
 import CalendarPage from "./calendar/index";
+import { CommanderPage } from "./commander/commander-page";
 
 const Layout = () => {
   return (
@@ -12,6 +13,8 @@ const Layout = () => {
           <Link to="/">Home</Link>
           <span> | </span>
           <Link to="/calendar">Calendar</Link>
+          <span> | </span>
+          <Link to="/commander">Commander</Link>
         </div>
         <hr />
         <Outlet />
@@ -36,6 +39,7 @@ const App = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Main />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/commander" element={<CommanderPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

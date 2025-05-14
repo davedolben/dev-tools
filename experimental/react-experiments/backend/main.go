@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/davedolben/dev-tools/experimental/react-experiments/calendar"
+	"github.com/davedolben/dev-tools/experimental/react-experiments/commander"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
@@ -29,6 +30,7 @@ func main() {
 
 	// Setup routes
 	calendar.SetupRoutes(r)
+	commander.SetupRoutes(r)
 
 	if *fStaticDir != "" {
 		r.Use(static.Serve("/", static.LocalFile(*fStaticDir, false)))
