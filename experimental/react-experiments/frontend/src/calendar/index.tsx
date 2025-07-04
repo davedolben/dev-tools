@@ -63,7 +63,6 @@ const CalendarPage = () => {
       try {
         // Get all calendars
         const fetchedCalendars = await getCalendars();
-        console.log('fetchedCalendars', fetchedCalendars);
         
         // If no calendars exist, create one with a random color
         if (!fetchedCalendars || fetchedCalendars.length === 0) {
@@ -300,7 +299,10 @@ const CalendarPage = () => {
       // Assign a unique color to the new calendar
       const color = getAvailableColor(usedColors);
       const newCalendar = await createCalendar({ ...settings, color });
-      setCalendars([...calendars, newCalendar]);
+
+      // Refresh all calendars from the server
+      const updatedCalendars = await getCalendars();
+      setCalendars(updatedCalendars);
       
       // Automatically activate the new calendar and set as last active
       setActiveCalendars(prev => [...prev, newCalendar.id]);
