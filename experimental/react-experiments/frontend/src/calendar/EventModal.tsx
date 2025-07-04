@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Event } from './calendar-client';
+import Modal, { ModalButton } from './Modal';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -37,8 +38,8 @@ const EventModal: React.FC<EventModalProps> = ({
     }
   }, [existingEvent]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (description.trim()) {
       if (existingEvent && onEditEvent) {
         onEditEvent({
@@ -65,56 +66,68 @@ const EventModal: React.FC<EventModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const modalTitle = existingEvent
+    ? 'Edit Event'
+    : `Add Event for ${format(selectedDate, 'MMMM d, yyyy')}`;
+
+  const buttons: ModalButton[] = [
+    ...(existingEvent && onDeleteEvent
+      ? [{
+          label: 'Delete Event',
+          onClick: handleDelete,
+          type: 'danger' as const,
+        }]
+      : []),
+    {
+      label: 'Cancel',
+      onClick: onClose,
+      type: 'secondary' as const,
+    },
+    {
+      label: existingEvent ? 'Save Changes' : 'Add Event',
+      onClick: () => handleSubmit(),
+      type: 'primary' as const,
+      autoFocus: true,
+      disabled: !description.trim(),
+    },
+  ];
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>{existingEvent ? 'Edit Event' : `Add Event for ${format(selectedDate, 'MMMM d, yyyy')}`}</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="eventDescription">Event Description:</label>
-            <input
-              type="text"
-              id="eventDescription"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter event description"
-              autoFocus
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="eventLength">Event Length (days):</label>
-            <input
-              type="number"
-              id="eventLength"
-              value={length}
-              onChange={(e) => setLength(Math.max(1, parseInt(e.target.value) || 1))}
-              min="1"
-              required
-            />
-          </div>
-          <div className="modal-actions">
-            {existingEvent && onDeleteEvent && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="btn-danger"
-              >
-                Delete Event
-              </button>
-            )}
-            <button type="button" onClick={onClose} className="btn-secondary">
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary">
-              {existingEvent ? 'Save Changes' : 'Add Event'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} buttons={buttons}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ margin: 0 }}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            handleSubmit(e);
+          }
+        }}
+      >
+        <div className="form-group">
+          <label htmlFor="eventDescription">Event Description:</label>
+          <input
+            type="text"
+            id="eventDescription"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter event description"
+            autoFocus
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="eventLength">Event Length (days):</label>
+          <input
+            type="number"
+            id="eventLength"
+            value={length}
+            onChange={(e) => setLength(Math.max(1, parseInt(e.target.value) || 1))}
+            min="1"
+            required
+          />
+        </div>
+      </form>
+    </Modal>
   );
 };
 

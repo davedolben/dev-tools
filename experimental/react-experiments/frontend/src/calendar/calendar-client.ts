@@ -13,6 +13,7 @@ export interface Calendar {
   name: string;
   description: string;
   color?: string;
+  skip_weekends?: boolean;
   created_at: string;
   updated_at: string;
 }
