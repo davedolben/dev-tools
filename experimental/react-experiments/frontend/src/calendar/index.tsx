@@ -72,7 +72,11 @@ const CalendarPage = () => {
             color: CALENDAR_COLORS[0],
             skip_weekends: false
           });
-          setCalendars([newCalendar]);
+
+          // Refresh all calendars from the server now that we've created a new one
+          const updatedCalendars = await getCalendars();
+          setCalendars(updatedCalendars);
+
           setActiveCalendars([newCalendar.id]);
           setLastActiveCalendarId(newCalendar.id);
         } else {
