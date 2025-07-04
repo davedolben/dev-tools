@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import './modal.css';
 
 export interface ModalButton {
@@ -35,7 +36,7 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content" role="dialog" aria-modal="true">
         <h3>{title}</h3>
@@ -63,6 +64,9 @@ const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  // Render the modal at the document root using a portal
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

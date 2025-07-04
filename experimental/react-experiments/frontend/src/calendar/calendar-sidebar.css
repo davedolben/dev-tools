@@ -108,6 +108,35 @@
   font-weight: bold;
 }
 
+.calendar-settings-btn {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ced4da;
+  background-color: #ffffff;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #6c757d;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.calendar-settings-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.calendar-settings-btn:active {
+  background-color: #e9ecef;
+  transform: scale(0.95);
+}
+
 .add-calendar-btn {
   width: 100%;
   padding: 10px;

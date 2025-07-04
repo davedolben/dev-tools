@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, createCalendar } from './calendar-client';
+import CalendarSettings from './CalendarSettings';
 import './calendar-sidebar.css';
 
 interface CalendarSidebarProps {
@@ -24,6 +25,8 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   const [isCreatingCalendar, setIsCreatingCalendar] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState('');
   const [newCalendarDescription, setNewCalendarDescription] = useState('');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [selectedCalendarForSettings, setSelectedCalendarForSettings] = useState<Calendar | null>(null);
 
   const handleCreateCalendar = () => {
     if (newCalendarName.trim()) {
@@ -32,6 +35,23 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
       setNewCalendarDescription('');
       setIsCreatingCalendar(false);
     }
+  };
+
+  const handleOpenSettings = (calendar: Calendar, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedCalendarForSettings(calendar);
+    setIsSettingsModalOpen(true);
+  };
+
+  const handleCloseSettings = () => {
+    setIsSettingsModalOpen(false);
+    setSelectedCalendarForSettings(null);
+  };
+
+  const handleSaveSettings = (updated: { name: string; skip_weekends: boolean }) => {
+    // TODO: Implement actual save functionality
+    console.log('Settings saved:', updated);
+    handleCloseSettings();
   };
 
   return (
@@ -71,6 +91,13 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
               {lastActiveCalendarId === calendar.id && (
                 <span className="active-indicator">✓</span>
               )}
+              <button
+                className="calendar-settings-btn"
+                onClick={(e) => handleOpenSettings(calendar, e)}
+                title="Calendar Settings"
+              >
+                <strong>S</strong>
+              </button>
             </li>
           ))}
         </ul>
@@ -103,6 +130,15 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
           </button>
         )}
       </div>
+
+      {selectedCalendarForSettings && (
+        <CalendarSettings
+          isOpen={isSettingsModalOpen}
+          onClose={handleCloseSettings}
+          calendar={selectedCalendarForSettings}
+          onSave={handleSaveSettings}
+        />
+      )}
     </div>
   );
 };
