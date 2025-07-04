@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, createCalendar } from './calendar-client';
-import CalendarSettings from './CalendarSettings';
+import { Calendar, createCalendar, CalendarSettings } from './calendar-client';
+import CalendarSettingsModal from './CalendarSettingsModal';
 import './calendar-sidebar.css';
 
 interface CalendarSidebarProps {
@@ -8,7 +8,8 @@ interface CalendarSidebarProps {
   activeCalendars: number[];
   lastActiveCalendarId: number | null;
   onToggleCalendar: (calendarId: number) => void;
-  onCreateCalendar: (name: string, description: string) => void;
+  onCreateCalendar: (settings: CalendarSettings) => void;
+  onUpdateCalendarSettings: (calendarId: number, settings: CalendarSettings) => void;
   isOpen: boolean;
   toggleSidebar: () => void;
 }
@@ -19,6 +20,7 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   lastActiveCalendarId,
   onToggleCalendar,
   onCreateCalendar,
+  onUpdateCalendarSettings,
   isOpen,
   toggleSidebar
 }) => {
@@ -30,7 +32,12 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
 
   const handleCreateCalendar = () => {
     if (newCalendarName.trim()) {
-      onCreateCalendar(newCalendarName, newCalendarDescription);
+      onCreateCalendar({
+        name: newCalendarName,
+        description: newCalendarDescription,
+        color: '#cccccc',
+        skip_weekends: false
+      });
       setNewCalendarName('');
       setNewCalendarDescription('');
       setIsCreatingCalendar(false);
@@ -48,9 +55,13 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
     setSelectedCalendarForSettings(null);
   };
 
-  const handleSaveSettings = (updated: { name: string; skip_weekends: boolean }) => {
-    // TODO: Implement actual save functionality
-    console.log('Settings saved:', updated);
+  const handleSaveSettings = (updated: Pick<CalendarSettings, 'name' | 'skip_weekends'>) => {
+    if (selectedCalendarForSettings) {
+      onUpdateCalendarSettings(selectedCalendarForSettings.id, {
+        ...selectedCalendarForSettings,
+        ...updated
+      });
+    }
     handleCloseSettings();
   };
 
@@ -132,7 +143,7 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
       </div>
 
       {selectedCalendarForSettings && (
-        <CalendarSettings
+        <CalendarSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={handleCloseSettings}
           calendar={selectedCalendarForSettings}
@@ -143,4 +154,4 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   );
 };
 
-export default CalendarSidebar; 
+export default CalendarSidebar;

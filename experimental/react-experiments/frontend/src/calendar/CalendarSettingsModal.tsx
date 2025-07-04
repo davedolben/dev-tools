@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { Calendar } from './calendar-client';
+import { Calendar, CalendarSettings } from './calendar-client';
 
 interface CalendarSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   calendar: Calendar;
-  onSave: (updated: { name: string; skip_weekends: boolean }) => void;
+  onSave: (updated: Pick<CalendarSettings, 'name' | 'skip_weekends'>) => void;
 }
 
-const CalendarSettings: React.FC<CalendarSettingsProps> = ({ isOpen, onClose, calendar, onSave }) => {
+const CalendarSettingsModal: React.FC<CalendarSettingsProps> = ({ isOpen, onClose, calendar, onSave }) => {
   const [name, setName] = useState(calendar.name);
   const [skipWeekends, setSkipWeekends] = useState(!!calendar.skip_weekends);
 
@@ -57,4 +57,4 @@ const CalendarSettings: React.FC<CalendarSettingsProps> = ({ isOpen, onClose, ca
   );
 };
 
-export default CalendarSettings;
+export default CalendarSettingsModal;

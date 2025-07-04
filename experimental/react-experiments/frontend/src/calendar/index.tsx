@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addDays } from 'date-fns';
 import Calendar from './calendar';
-import { getCalendars, createCalendar, getCalendarEvents, createEvent, updateEvent, deleteEvent, apiEventToFrontendEvent, frontendEventToApiEvent, Event, APIEvent, Calendar as CalendarType } from './calendar-client';
+import { getCalendars, createCalendar, updateCalendar, getCalendarEvents, createEvent, updateEvent, deleteEvent, apiEventToFrontendEvent, frontendEventToApiEvent, Event, APIEvent, Calendar as CalendarType, CalendarSettings } from './calendar-client';
 import CalendarSidebar from './CalendarSidebar';
 
 // Array of predefined colors for calendars
@@ -76,10 +76,16 @@ const CalendarPage = () => {
       try {
         // Get all calendars
         const fetchedCalendars = await getCalendars();
+        console.log('fetchedCalendars', fetchedCalendars);
         
         // If no calendars exist, create one with a random color
         if (!fetchedCalendars || fetchedCalendars.length === 0) {
-          const newCalendar = await createCalendar('My Calendar', 'A calendar for my events', CALENDAR_COLORS[0]);
+          const newCalendar = await createCalendar({
+            name: 'My Calendar',
+            description: 'A calendar for my events',
+            color: CALENDAR_COLORS[0],
+            skip_weekends: false
+          });
           setCalendars([newCalendar]);
           setActiveCalendars([newCalendar.id]);
           setLastActiveCalendarId(newCalendar.id);
@@ -297,7 +303,7 @@ const CalendarPage = () => {
     }
   };
 
-  const handleCreateCalendar = async (name: string, description: string) => {
+  const handleCreateCalendar = async (settings: CalendarSettings) => {
     try {
       // Get currently used colors from existing calendars
       const usedColors = calendars
@@ -306,7 +312,7 @@ const CalendarPage = () => {
       
       // Assign a unique color to the new calendar
       const color = getAvailableColor(usedColors);
-      const newCalendar = await createCalendar(name, description, color);
+      const newCalendar = await createCalendar({ ...settings, color });
       setCalendars([...calendars, newCalendar]);
       
       // Automatically activate the new calendar and set as last active
@@ -314,6 +320,19 @@ const CalendarPage = () => {
       setLastActiveCalendarId(newCalendar.id);
     } catch (err) {
       setError('Failed to create calendar');
+      console.error(err);
+    }
+  };
+
+  const handleUpdateCalendarSettings = async (calendarId: number, settings: CalendarSettings) => {
+    try {
+      await updateCalendar(calendarId, settings);
+      
+      // Refresh all calendars from the server
+      const updatedCalendars = await getCalendars();
+      setCalendars(updatedCalendars);
+    } catch (err) {
+      setError('Failed to update calendar settings');
       console.error(err);
     }
   };
@@ -336,6 +355,7 @@ const CalendarPage = () => {
         lastActiveCalendarId={lastActiveCalendarId}
         onToggleCalendar={handleToggleCalendar}
         onCreateCalendar={handleCreateCalendar}
+        onUpdateCalendarSettings={handleUpdateCalendarSettings}
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
       />

@@ -7,17 +7,19 @@ export interface Event {
   color?: string;
 }
 
-// API types
-export interface Calendar {
-  id: number;
+export interface CalendarSettings {
   name: string;
   description: string;
-  color?: string;
-  skip_weekends?: boolean;
+  color: string;
+  skip_weekends: boolean;
+}
+
+// API types
+export interface Calendar extends CalendarSettings {
+  id: number;
   created_at: string;
   updated_at: string;
 }
-
 export interface APIEvent {
   id: number;
   calendar_id: number;
@@ -62,13 +64,23 @@ export async function getCalendars(): Promise<Calendar[]> {
   return response.json();
 }
 
-export async function createCalendar(name: string, description: string, color?: string): Promise<Calendar> {
+export async function createCalendar(settings: CalendarSettings): Promise<Calendar> {
   const response = await fetch(`${API_BASE_URL}/calendars`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, description, color }),
+    body: JSON.stringify(settings),
   });
   if (!response.ok) throw new Error('Failed to create calendar');
+  return response.json();
+}
+
+export async function updateCalendar(calendarId: number, settings: CalendarSettings): Promise<Calendar> {
+  const response = await fetch(`${API_BASE_URL}/calendars/${calendarId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) throw new Error('Failed to update calendar');
   return response.json();
 }
 

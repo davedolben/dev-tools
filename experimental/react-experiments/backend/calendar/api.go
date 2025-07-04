@@ -51,6 +51,7 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		calendarGroup.GET("", GetCalendars)
 		calendarGroup.POST("", CreateCalendar)
+		calendarGroup.PUT("/:id", UpdateCalendar)
 		calendarGroup.GET("/:id/events", GetCalendarEvents)
 		calendarGroup.POST("/:id/events", CreateEvent)
 		calendarGroup.PUT("/events/:eventId", UpdateEvent)
@@ -164,6 +165,39 @@ func CreateCalendar(c *gin.Context) {
 	c.JSON(http.StatusCreated, cal)
 }
 
+func UpdateCalendar(c *gin.Context) {
+	calendarID := c.Param("id")
+	var cal Calendar
+	if err := c.ShouldBindJSON(&cal); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	// Verify calendar exists
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM calendars WHERE id = ?)", calendarID).Scan(&exists)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify calendar"})
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
+		return
+	}
+
+	_, err = db.Exec(`
+		UPDATE calendars 
+		SET name = ?, description = ?, color = ?, skip_weekends = ?, updated_at = UNIXEPOCH()
+		WHERE id = ?
+	`, cal.Name, cal.Description, cal.Color, cal.SkipWeekends, calendarID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update calendar: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, cal)
+}
+
 func CreateEvent(c *gin.Context) {
 	calendarID := c.Param("id")
 	var event Event
@@ -241,7 +275,6 @@ func UpdateEvent(c *gin.Context) {
 		return
 	}
 
-	event.ID, _ = strconv.ParseInt(eventID, 10, 64)
 	c.JSON(http.StatusOK, event)
 }
 
