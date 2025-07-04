@@ -2,36 +2,49 @@ package calendar
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/davedolben/dev-tools/experimental/react-experiments/sqlutil"
 	"github.com/gin-gonic/gin"
 	_ "github.com/glebarez/go-sqlite"
 )
 
 type Calendar struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Color       string    `json:"color"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           int64         `json:"id"`
+	Name         string        `json:"name"`
+	Description  string        `json:"description"`
+	Color        string        `json:"color"`
+	SkipWeekends bool          `json:"skip_weekends"`
+	CreatedAt    sqlutil.TimeS `json:"created_at"`
+	UpdatedAt    sqlutil.TimeS `json:"updated_at"`
 }
 
 type Event struct {
-	ID          int64     `json:"id"`
-	CalendarID  int64     `json:"calendar_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	StartTime   time.Time `json:"start_time"`
-	Length      int       `json:"length"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64         `json:"id"`
+	CalendarID  int64         `json:"calendar_id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	StartDate   sqlutil.Date  `json:"start_date"`
+	Length      int           `json:"length"`
+	CreatedAt   sqlutil.TimeS `json:"created_at"`
+	UpdatedAt   sqlutil.TimeS `json:"updated_at"`
 }
 
 var db *sql.DB
+
+func InitDB(dbPath string) error {
+	var err error
+	db, err = sql.Open("sqlite", dbPath)
+	if err != nil {
+		return fmt.Errorf("error opening database: %v", err)
+	}
+
+	return migrateDB(db)
+}
 
 func SetupRoutes(r *gin.Engine) {
 	calendarGroup := r.Group("/api/calendars")
@@ -46,7 +59,17 @@ func SetupRoutes(r *gin.Engine) {
 }
 
 func GetCalendars(c *gin.Context) {
-	rows, err := db.Query("SELECT id, name, description, COALESCE(color, '#cccccc') as color, created_at, updated_at FROM calendars")
+	rows, err := db.Query(`
+		SELECT
+			id,
+			name,
+			description,
+			COALESCE(color, '#cccccc') as color,
+			COALESCE(skip_weekends, FALSE) as skip_weekends,
+			created_at,
+			updated_at
+		FROM calendars
+	`)
 	if err != nil {
 		log.Println("Failed to fetch calendars:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch calendars"})
@@ -57,7 +80,15 @@ func GetCalendars(c *gin.Context) {
 	var calendars []Calendar
 	for rows.Next() {
 		var cal Calendar
-		err := rows.Scan(&cal.ID, &cal.Name, &cal.Description, &cal.Color, &cal.CreatedAt, &cal.UpdatedAt)
+		err := rows.Scan(
+			&cal.ID,
+			&cal.Name,
+			&cal.Description,
+			&cal.Color,
+			&cal.SkipWeekends,
+			&cal.CreatedAt,
+			&cal.UpdatedAt,
+		)
 		if err != nil {
 			log.Println("Failed to scan calendar:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan calendar"})
@@ -73,7 +104,7 @@ func GetCalendarEvents(c *gin.Context) {
 	calendarID := c.Param("id")
 
 	rows, err := db.Query(`
-		SELECT id, calendar_id, title, description, start_time, length, created_at, updated_at 
+		SELECT id, calendar_id, title, description, start_date, length, created_at, updated_at 
 		FROM events 
 		WHERE calendar_id = ?
 	`, calendarID)
@@ -92,7 +123,7 @@ func GetCalendarEvents(c *gin.Context) {
 			&event.CalendarID,
 			&event.Title,
 			&event.Description,
-			&event.StartTime,
+			&event.StartDate,
 			&event.Length,
 			&event.CreatedAt,
 			&event.UpdatedAt,
@@ -110,14 +141,14 @@ func GetCalendarEvents(c *gin.Context) {
 func CreateCalendar(c *gin.Context) {
 	var cal Calendar
 	if err := c.ShouldBindJSON(&cal); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
 	result, err := db.Exec(`
-		INSERT INTO calendars (name, description, color, created_at, updated_at)
-		VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, cal.Name, cal.Description, cal.Color)
+		INSERT INTO calendars (name, description, color, skip_weekends, created_at, updated_at)
+		VALUES (?, ?, ?, ?, UNIXEPOCH(), UNIXEPOCH())
+	`, cal.Name, cal.Description, cal.Color, cal.SkipWeekends)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create calendar"})
 		return
@@ -137,7 +168,7 @@ func CreateEvent(c *gin.Context) {
 	calendarID := c.Param("id")
 	var event Event
 	if err := c.ShouldBindJSON(&event); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
@@ -154,11 +185,18 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	result, err := db.Exec(`
-		INSERT INTO events (calendar_id, title, description, start_time, length, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, calendarID, event.Title, event.Description, event.StartTime, event.Length)
+		INSERT INTO events (calendar_id, title, description, start_date, length, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, UNIXEPOCH(), UNIXEPOCH())
+	`,
+		calendarID,
+		event.Title,
+		event.Description,
+		&event.StartDate,
+		event.Length,
+		time.Now().Unix(),
+	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create event"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create event: " + err.Error()})
 		return
 	}
 
@@ -177,7 +215,7 @@ func UpdateEvent(c *gin.Context) {
 	eventID := c.Param("eventId")
 	var event Event
 	if err := c.ShouldBindJSON(&event); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
@@ -195,11 +233,11 @@ func UpdateEvent(c *gin.Context) {
 
 	_, err = db.Exec(`
 		UPDATE events 
-		SET title = ?, description = ?, start_time = ?, length = ?, updated_at = CURRENT_TIMESTAMP
+		SET title = ?, description = ?, start_date = ?, length = ?, updated_at = UNIXEPOCH()
 		WHERE id = ?
-	`, event.Title, event.Description, event.StartTime, event.Length, eventID)
+	`, event.Title, event.Description, &event.StartDate, event.Length, eventID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update event"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update event: " + err.Error()})
 		return
 	}
 

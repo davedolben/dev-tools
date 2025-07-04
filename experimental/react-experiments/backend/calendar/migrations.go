@@ -22,58 +22,35 @@ var migrations = []Migration{
 					name TEXT NOT NULL,
 					description TEXT,
 					color TEXT,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-					updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+					skip_weekends BOOLEAN DEFAULT FALSE,
+					-- SQLite supposedly doesn't have any datetime types, so we use unix epoch timestamps
+					created_at INTEGER,
+					updated_at INTEGER
 				);
 				CREATE TABLE IF NOT EXISTS events (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
 					calendar_id INTEGER NOT NULL,
 					title TEXT NOT NULL,
 					description TEXT,
-					start_time DATETIME NOT NULL,
+					-- This should be a date in the format YYYY-MM-DD
+					start_date TEXT NOT NULL,
 					length INTEGER NOT NULL,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-					updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+					-- SQLite supposedly doesn't have any datetime types, so we use unix epoch timestamps
+					created_at INTEGER,
+					updated_at INTEGER,
 					FOREIGN KEY (calendar_id) REFERENCES calendars(id)
 				);`)
 			return err
 		},
 	},
-	{
-		Version: 2,
-		Up: func(db *sql.DB) error {
-			// Check if color column exists in calendars table, if not add it
-			_, err := db.Exec(`SELECT color FROM calendars LIMIT 1`)
-
-			if err != nil {
-				log.Println("Adding color column to calendars table")
-				// Column doesn't exist, add it
-				_, err = db.Exec(`ALTER TABLE calendars ADD COLUMN color TEXT`)
-				if err != nil {
-					return fmt.Errorf("error adding color column: %v", err)
-				}
-			}
-			return nil
-		},
-	},
 }
 
-func InitDB(dbPath string) error {
-	var err error
-	db, err = sql.Open("sqlite", dbPath)
-	if err != nil {
-		return fmt.Errorf("error opening database: %v", err)
-	}
-
-	return MigrateDB(db)
-}
-
-func MigrateDB(db *sql.DB) error {
+func migrateDB(db *sql.DB) error {
 	// Add a migrations table
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS migrations (
 			version INTEGER PRIMARY KEY NOT NULL,
-			applied_at INTEGER DEFAULT UNIXEPOCH
+			applied_at INTEGER
 		)`)
 	if err != nil {
 		return fmt.Errorf("error creating migrations table: %v", err)
@@ -104,7 +81,7 @@ func MigrateDB(db *sql.DB) error {
 		}
 
 		// Update the highest applied migration version
-		_, err = db.Exec(`INSERT INTO migrations (version) VALUES (?)`, migration.Version)
+		_, err = db.Exec(`INSERT INTO migrations (version, applied_at) VALUES (?, UNIXEPOCH())`, migration.Version)
 		if err != nil {
 			return fmt.Errorf("error updating highest applied migration version: %v", err)
 		}

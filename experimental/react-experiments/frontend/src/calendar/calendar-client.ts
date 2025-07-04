@@ -22,7 +22,7 @@ export interface APIEvent {
   calendar_id: number;
   title: string;
   description: string;
-  start_time: string;
+  start_date: string;
   length: number;
   created_at: string;
   updated_at: string;
@@ -35,7 +35,8 @@ export function apiEventToFrontendEvent(apiEvent: APIEvent, calendarColor?: stri
   return {
     id: apiEvent.id.toString(),
     description: apiEvent.title,
-    date: new Date(apiEvent.start_time),
+    // start_date is in the format YYYY-MM-DD, convert it to a Date object at midnight on that date in the local timezone
+    date: new Date(apiEvent.start_date + 'T00:00:00'),
     length: apiEvent.length,
     calendarId: apiEvent.calendar_id,
     color: calendarColor
@@ -48,7 +49,8 @@ export function frontendEventToApiEvent(event: Event, calendarId: number): Parti
     calendar_id: calendarId,
     title: event.description,
     description: event.description,
-    start_time: event.date.toISOString(),
+    // Format the date as YYYY-MM-DD
+    start_date: event.date.toISOString().split('T')[0],
     length: event.length,
   };
 }
