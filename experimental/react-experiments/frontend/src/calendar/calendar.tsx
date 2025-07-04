@@ -202,7 +202,10 @@ const Calendar: React.FC<CalendarProps> = ({
     // Process each event
     events.forEach(event => {
       const eventStart = event.date;
-      const eventEnd = calculateBusinessDaysEndDate(eventStart, event.length);
+      const eventEnd =
+        event.skipWeekends ?
+          calculateBusinessDaysEndDate(eventStart, event.length) :
+          addDays(eventStart, event.length - 1);
       
       // Get all days this event spans
       const eventDays = eachDayOfInterval({ start: eventStart, end: eventEnd });

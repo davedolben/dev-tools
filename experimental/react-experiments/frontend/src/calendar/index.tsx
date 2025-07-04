@@ -122,7 +122,7 @@ const CalendarPage = () => {
           
           const apiEvents = await getCalendarEvents(calendarId) || [];
           const calendarEvents = apiEvents.map(apiEvent => 
-            apiEventToFrontendEvent(apiEvent, calendar.color)
+            apiEventToFrontendEvent(apiEvent, calendar)
           );
           
           allEvents.push(...calendarEvents);
@@ -204,7 +204,7 @@ const CalendarPage = () => {
         
         const apiEvents = await getCalendarEvents(calendarId) || [];
         const calendarEvents = apiEvents.map(apiEvent => 
-          apiEventToFrontendEvent(apiEvent, calendar.color)
+          apiEventToFrontendEvent(apiEvent, calendar)
         );
         
         allEvents.push(...calendarEvents);

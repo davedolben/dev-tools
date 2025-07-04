@@ -5,6 +5,7 @@ export interface Event {
   length: number; // Number of days the event spans
   calendarId: number;
   color?: string;
+  skipWeekends?: boolean;
 }
 
 export interface CalendarSettings {
@@ -34,7 +35,7 @@ export interface APIEvent {
 const API_BASE_URL = '/api';
 
 // Helper function to convert API event to frontend event
-export function apiEventToFrontendEvent(apiEvent: APIEvent, calendarColor?: string): Event {
+export function apiEventToFrontendEvent(apiEvent: APIEvent, calendarSettings: CalendarSettings): Event {
   return {
     id: apiEvent.id.toString(),
     description: apiEvent.title,
@@ -42,7 +43,8 @@ export function apiEventToFrontendEvent(apiEvent: APIEvent, calendarColor?: stri
     date: new Date(apiEvent.start_date + 'T00:00:00'),
     length: apiEvent.length,
     calendarId: apiEvent.calendar_id,
-    color: calendarColor
+    color: calendarSettings.color,
+    skipWeekends: calendarSettings.skip_weekends,
   };
 }
 
