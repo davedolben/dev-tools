@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { Calendar, CalendarSettings } from './calendar-client';
+import ColorPicker from './ColorPicker';
 
 interface CalendarSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   calendar: Calendar;
-  onSave: (updated: Pick<CalendarSettings, 'name' | 'skip_weekends'>) => void;
+  onSave: (updated: CalendarSettings) => void;
 }
 
 const CalendarSettingsModal: React.FC<CalendarSettingsProps> = ({ isOpen, onClose, calendar, onSave }) => {
   const [name, setName] = useState(calendar.name);
+  const [description, setDescription] = useState(calendar.description || '');
+  const [color, setColor] = useState(calendar.color || '#cccccc');
   const [skipWeekends, setSkipWeekends] = useState(!!calendar.skip_weekends);
 
   useEffect(() => {
     setName(calendar.name);
+    setDescription(calendar.description || '');
+    setColor(calendar.color || '#cccccc');
     setSkipWeekends(!!calendar.skip_weekends);
   }, [calendar]);
 
   const handleSave = () => {
-    onSave({ name, skip_weekends: skipWeekends });
+    onSave({ name, description, color, skip_weekends: skipWeekends });
     onClose();
   };
 
@@ -43,6 +48,27 @@ const CalendarSettingsModal: React.FC<CalendarSettingsProps> = ({ isOpen, onClos
             style={{ width: '100%', marginTop: 4 }}
             autoFocus
           />
+        </label>
+        <label>
+          Description:
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            style={{ 
+              width: '100%', 
+              marginTop: 4, 
+              minHeight: '80px',
+              resize: 'vertical',
+              fontFamily: 'inherit'
+            }}
+            placeholder="Enter calendar description (optional)"
+          />
+        </label>
+        <label>
+          Color:
+          <div style={{ marginTop: 4 }}>
+            <ColorPicker value={color} onChange={setColor} />
+          </div>
         </label>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input

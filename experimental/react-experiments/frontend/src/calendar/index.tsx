@@ -3,20 +3,7 @@ import { addDays } from 'date-fns';
 import Calendar from './calendar';
 import { getCalendars, createCalendar, updateCalendar, getCalendarEvents, createEvent, updateEvent, deleteEvent, apiEventToFrontendEvent, frontendEventToApiEvent, Event, APIEvent, Calendar as CalendarType, CalendarSettings } from './calendar-client';
 import CalendarSidebar from './CalendarSidebar';
-
-// Array of predefined colors for calendars
-const CALENDAR_COLORS = [
-  '#4285F4', // Blue
-  '#EA4335', // Red
-  '#FBBC05', // Yellow
-  '#34A853', // Green
-  '#8E24AA', // Purple
-  '#F6BF26', // Gold
-  '#0B8043', // Dark Green
-  '#D50000', // Bright Red
-  '#3F51B5', // Indigo
-  '#039BE5', // Light Blue
-];
+import { CALENDAR_COLORS } from './constants';
 
 // Keep track of which colors have been used
 const getAvailableColor = (usedColors: string[]) => {

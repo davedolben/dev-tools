@@ -55,7 +55,7 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
     setSelectedCalendarForSettings(null);
   };
 
-  const handleSaveSettings = (updated: Pick<CalendarSettings, 'name' | 'skip_weekends'>) => {
+  const handleSaveSettings = (updated: CalendarSettings) => {
     if (selectedCalendarForSettings) {
       onUpdateCalendarSettings(selectedCalendarForSettings.id, {
         ...selectedCalendarForSettings,
