@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -33,59 +32,6 @@ type Event struct {
 }
 
 var db *sql.DB
-
-func InitDB(dbPath string) error {
-	var err error
-	db, err = sql.Open("sqlite", dbPath)
-	if err != nil {
-		return fmt.Errorf("error opening database: %v", err)
-	}
-
-	// Create tables if they don't exist
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS calendars (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			description TEXT,
-			color TEXT,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE TABLE IF NOT EXISTS events (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			calendar_id INTEGER NOT NULL,
-			title TEXT NOT NULL,
-			description TEXT,
-			start_time DATETIME NOT NULL,
-			length INTEGER NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (calendar_id) REFERENCES calendars(id)
-		);
-	`)
-
-	if err != nil {
-		return err
-	}
-
-	// Check if color column exists in calendars table, if not add it
-	_, err = db.Exec(`
-		SELECT color FROM calendars LIMIT 1
-	`)
-
-	if err != nil {
-		log.Println("Adding color column to calendars table")
-		// Column doesn't exist, add it
-		_, err = db.Exec(`
-			ALTER TABLE calendars ADD COLUMN color TEXT
-		`)
-		if err != nil {
-			return fmt.Errorf("error adding color column: %v", err)
-		}
-	}
-
-	return nil
-}
 
 func SetupRoutes(r *gin.Engine) {
 	calendarGroup := r.Group("/api/calendars")
