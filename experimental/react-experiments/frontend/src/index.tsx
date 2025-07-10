@@ -4,6 +4,7 @@ import "./style.css";
 import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
 import CalendarPage from "./calendar/index";
 import { CommanderPage } from "./commander/commander-page";
+import { ListThing } from "./list-thing";
 
 const Layout = () => {
   return (
@@ -15,6 +16,8 @@ const Layout = () => {
           <Link to="/calendar">Calendar</Link>
           <span> | </span>
           <Link to="/commander">Commander</Link>
+          <span> | </span>
+          <Link to="/list-thing">List Thing</Link>
         </div>
         <hr />
         <Outlet />
@@ -40,6 +43,7 @@ const App = () => {
             <Route index element={<Main />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/commander" element={<CommanderPage />} />
+            <Route path="/list-thing" element={<ListThing />} />
           </Route>
         </Routes>
       </BrowserRouter>
