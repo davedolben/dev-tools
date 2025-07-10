@@ -4,7 +4,7 @@ const initialLists = [
   {
     id: 100,
     items: [
-      { id: 101, name: "Item 100" },
+      { id: 101, name: "Item 100", numChildren: 3 },
       { id: 2, name: "Item 2" },
       { id: 3, name: "Item 3" },
     ],
@@ -13,7 +13,7 @@ const initialLists = [
     id: 101,
     items: [
       { id: 4, name: "Item 4" },
-      { id: 102, name: "Item 102" },
+      { id: 102, name: "Item 102", numChildren: 3 },
       { id: 6, name: "Item 6" },
     ],
   },
@@ -30,6 +30,7 @@ const initialLists = [
 export type ListItemData = {
   id: number;
   name: string;
+  numChildren?: number;
 };
 
 export type ListData = {
@@ -86,16 +87,35 @@ class ListStateManager {
     }
   }
 
+  // Helper method to update numChildren for items that reference a specific list
+  private updateNumChildrenForList(listId: number): void {
+    const targetList = this._lists.find(list => list.id === listId);
+    if (!targetList) return;
+
+    const numChildren = targetList.items.length;
+    
+    // Find all items across all lists that reference this list
+    this._lists.forEach(list => {
+      list.items.forEach(item => {
+        if (item.id === listId) {
+          item.numChildren = numChildren;
+        }
+      });
+    });
+  }
+
   async setList(listId: number, items: ListItemData[]): Promise<void> {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
       this._lists[listIndex] = { ...this._lists[listIndex], items };
+      this.updateNumChildrenForList(listId);
       this.notifyListListeners(listId);
     }
   }
 
   async addList(list: ListData): Promise<void> {
     this._lists.push(list);
+    this.updateNumChildrenForList(list.id);
     // Notify any existing listeners for this list
     this.notifyListListeners(list.id);
   }
@@ -112,6 +132,7 @@ class ListStateManager {
       const itemIndex = this._lists[listIndex].items.findIndex(item => item.id === itemId);
       if (itemIndex !== -1) {
         this._lists[listIndex].items[itemIndex] = { ...this._lists[listIndex].items[itemIndex], ...updates };
+        this.updateNumChildrenForList(listId);
         this.notifyListListeners(listId);
       }
     }
@@ -121,6 +142,7 @@ class ListStateManager {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
       this._lists[listIndex].items.push(item);
+      this.updateNumChildrenForList(listId);
       this.notifyListListeners(listId);
     }
   }
@@ -129,6 +151,7 @@ class ListStateManager {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
       this._lists[listIndex].items = this._lists[listIndex].items.filter(item => item.id !== itemId);
+      this.updateNumChildrenForList(listId);
       this.notifyListListeners(listId);
     }
   }
@@ -151,6 +174,10 @@ class ListStateManager {
         } else {
           this._lists[toListIndex].items.push(movedItem);
         }
+        
+        // Update numChildren for both lists
+        this.updateNumChildrenForList(fromListId);
+        this.updateNumChildrenForList(toListId);
         
         // Notify listeners for both lists
         this.notifyListListeners(fromListId);

@@ -236,6 +236,19 @@ const ListItem = ({
       onClick={onClick}
     >
       {data.name}
+      {
+        data.numChildren ?
+          <div style={{
+              fontSize: "12px", color: "#666",
+              position: "absolute",
+              right: "12px",
+              top: "12px",
+            }}
+          >
+            ({data.numChildren})
+          </div> :
+          null
+      }
       {isDragOver && (
         <div
           style={{
