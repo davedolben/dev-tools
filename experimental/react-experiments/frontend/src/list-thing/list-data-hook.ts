@@ -124,6 +124,32 @@ class ListStateManager {
       this.notifyListListeners(listId);
     }
   }
+
+  async moveItem(fromListId: number, toListId: number, itemId: number, targetIndex?: number): Promise<void> {
+    const fromListIndex = this._lists.findIndex(list => list.id === fromListId);
+    const toListIndex = this._lists.findIndex(list => list.id === toListId);
+    
+    if (fromListIndex !== -1 && toListIndex !== -1) {
+      const fromList = this._lists[fromListIndex];
+      const itemIndex = fromList.items.findIndex(item => item.id === itemId);
+      
+      if (itemIndex !== -1) {
+        // Remove item from source list
+        const [movedItem] = fromList.items.splice(itemIndex, 1);
+        
+        // Add item to destination list at specific index or at the end
+        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= this._lists[toListIndex].items.length) {
+          this._lists[toListIndex].items.splice(targetIndex, 0, movedItem);
+        } else {
+          this._lists[toListIndex].items.push(movedItem);
+        }
+        
+        // Notify listeners for both lists
+        this.notifyListListeners(fromListId);
+        this.notifyListListeners(toListId);
+      }
+    }
+  }
 }
 
 export const useListData = (listId: number) => {
@@ -189,9 +215,14 @@ export const useListManager = () => {
     return manager.lists;
   }, [manager]);
 
+  const moveItem = useCallback(async (fromListId: number, toListId: number, itemId: number, targetIndex?: number) => {
+    return manager.moveItem(fromListId, toListId, itemId, targetIndex);
+  }, [manager]);
+
   return {
     addList,
     removeList,
     getAllLists,
+    moveItem,
   };
 };

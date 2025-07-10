@@ -1,42 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { List } from "./list";
-import { ListItemData } from "./list-data-hook";
+import { useListManager } from "./list-data-hook";
 
 export const ListThing = () => {
-  const [lists, setLists] = useState<ListItemData[][]>([]);
-  const [draggedItem, setDraggedItem] = useState<{ id: number; fromListIndex: number } | null>(null);
+  const [listIds, setListIds] = useState<number[]>([]);
+  const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
+  const { getAllLists, moveItem } = useListManager();
 
-  const handleItemsReorder = (listIndex: number, newItems: ListItemData[]) => {
-    setLists(prevLists => {
-      const newLists = [...prevLists];
-      newLists[listIndex] = newItems;
-      return newLists;
-    });
-  };
+  // Initialize with existing lists
+  useEffect(() => {
+    const initializeLists = async () => {
+      const lists = await getAllLists();
+      setListIds(lists.map(list => list.id));
+    };
+    initializeLists();
+  }, [getAllLists]);
 
-  const handleItemMove = (fromListIndex: number, toListIndex: number, itemId: number, dropIndex: number) => {
-    setLists(prevLists => {
-      const newLists = [...prevLists];
-      
-      // Find the item to move
-      const fromList = newLists[fromListIndex];
-      const itemIndex = fromList.findIndex(item => item.id === itemId);
-      
-      if (itemIndex === -1) return prevLists;
-      
-      const [movedItem] = fromList.splice(itemIndex, 1);
-      
-      // Add to the target list
-      const toList = newLists[toListIndex];
-      toList.splice(dropIndex, 0, movedItem);
-      
-      return newLists;
-    });
+  const handleItemMove = async (fromListId: number, toListId: number, itemId: number, dropIndex: number) => {
+    await moveItem(fromListId, toListId, itemId, dropIndex);
     setDraggedItem(null);
   };
 
-  const handleDragStart = (id: number, fromListIndex: number) => {
-    setDraggedItem({ id, fromListIndex });
+  const handleDragStart = (id: number, fromListId: number) => {
+    setDraggedItem({ id, fromListId });
   };
 
   const handleDragEnd = () => {
@@ -49,14 +35,13 @@ export const ListThing = () => {
       display: "flex",
       gap: "10px",
     }}>
-      {lists.map((list: ListItemData[], listIndex: number) => (
-        <div key={listIndex} style={{ flex: 1 }}>
+      {listIds.map((listId: number, listIndex: number) => (
+        <div key={listId} style={{ flex: 1 }}>
           <List
             name={`List ${listIndex}`}
-            items={list}
+            listId={listId}
             listIndex={listIndex}
             draggedItem={draggedItem}
-            onItemsReorder={(newItems) => handleItemsReorder(listIndex, newItems)}
             onItemMove={handleItemMove}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
