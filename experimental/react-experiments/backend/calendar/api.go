@@ -46,7 +46,12 @@ func InitDB(dbPath string) error {
 	return migrateDB(db)
 }
 
-func SetupRoutes(r *gin.Engine) {
+func SetupRoutes(r *gin.Engine, dbPath string) {
+	// Initialize database
+	if err := InitDB(dbPath); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
 	calendarGroup := r.Group("/api/calendars")
 	{
 		calendarGroup.GET("", GetCalendars)

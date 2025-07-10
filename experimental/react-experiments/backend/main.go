@@ -20,16 +20,11 @@ func main() {
 	fStaticDir := flag.String("static-dir", "", "path to static files")
 	flag.Parse()
 
-	// Initialize database
-	if err := calendar.InitDB(*fCalendarDBPath); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
-	}
-
 	// Create Gin router
 	r := gin.Default()
 
 	// Setup routes
-	calendar.SetupRoutes(r)
+	calendar.SetupRoutes(r, *fCalendarDBPath)
 	commander.SetupRoutes(r)
 
 	if *fStaticDir != "" {
