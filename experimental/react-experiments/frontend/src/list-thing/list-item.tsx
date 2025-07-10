@@ -16,6 +16,7 @@ type ListItemProps = {
   onPlusClick?: (itemId: number) => void;
   onPlusTopClick?: (itemId: number) => void;
   onPlusBottomClick?: (itemId: number) => void;
+  onRemoveItem?: (itemId: number) => void;
   style?: React.CSSProperties;
 };
 
@@ -34,6 +35,7 @@ export const ListItem = ({
   onPlusClick,
   onPlusTopClick,
   onPlusBottomClick,
+  onRemoveItem,
   style
 }: ListItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -131,6 +133,13 @@ export const ListItem = ({
     }
   };
 
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onRemoveItem) {
+      onRemoveItem(data.id);
+    }
+  };
+
   return (
     <div
       style={{
@@ -150,6 +159,9 @@ export const ListItem = ({
         opacity: isDragging ? 0.5 : 1,
         transition: "all 0.2s ease",
         position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
         ...style
       }}
       draggable={!isSelected}
@@ -163,73 +175,114 @@ export const ListItem = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {isEditing ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={handleKeyDown}
-          style={{
-            width: "100%",
-            border: "none",
-            outline: "none",
-            backgroundColor: "transparent",
-            fontSize: "inherit",
-            fontFamily: "inherit",
-          }}
-        />
-      ) : (
-        <span>{data.name}</span>
-      )}
-      {
-        data.numChildren != undefined ?
-          <div style={{
-              fontSize: "12px", color: "#666",
-              position: "absolute",
-              right: "12px",
-              top: "12px",
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            style={{
+              width: "100%",
+              border: "none",
+              outline: "none",
+              backgroundColor: "transparent",
+              fontSize: "inherit",
+              fontFamily: "inherit",
+            }}
+          />
+        ) : (
+          <span>{data.name}</span>
+        )}
+      </div>
+
+      {/* Right side elements container */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginLeft: "12px"
+      }}>
+        {/* Remove button */}
+        {isHovered && onRemoveItem && (
+          <button
+            onClick={handleRemoveClick}
+            style={{
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              color: "#dc3545",
+              fontSize: "14px",
+              lineHeight: "1",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f0f0f0";
+              e.currentTarget.style.borderColor = "#999";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "white";
+              e.currentTarget.style.borderColor = "#ccc";
             }}
           >
-            ({data.numChildren})
-          </div> :
-          null
-      }
-      {data.numChildren == undefined && onPlusClick && (
-        <button
-          onClick={handlePlusClick}
-          style={{
-            position: "absolute",
-            right: "8px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "20px",
-            height: "20px",
-            borderRadius: "50%",
-            border: "1px solid #ccc",
-            backgroundColor: "white",
+            X
+          </button>
+        )}
+
+        {/* Children count */}
+        {data.numChildren != undefined && (
+          <div style={{
+            fontSize: "12px", 
             color: "#666",
-            fontSize: "14px",
-            lineHeight: "1",
-            cursor: "pointer",
+            height: "20px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#f0f0f0";
-            e.currentTarget.style.borderColor = "#999";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "white";
-            e.currentTarget.style.borderColor = "#ccc";
-          }}
-        >
-          +
-        </button>
-      )}
+          }}>
+            ({data.numChildren})
+          </div>
+        )}
+
+        {/* Plus button */}
+        {data.numChildren == undefined && onPlusClick && (
+          <button
+            onClick={handlePlusClick}
+            style={{
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              color: "#666",
+              fontSize: "14px",
+              lineHeight: "1",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f0f0f0";
+              e.currentTarget.style.borderColor = "#999";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "white";
+              e.currentTarget.style.borderColor = "#ccc";
+            }}
+          >
+            +
+          </button>
+        )}
+      </div>
       
       {/* Top center plus button */}
       {isHovered && onPlusTopClick && (

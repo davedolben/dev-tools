@@ -25,7 +25,7 @@ export const List = ({
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
-  const { list, updateList, updateItem, addItem } = useListData(listId);
+  const { list, updateList, updateItem, addItem, removeItem } = useListData(listId);
 
   // Don't render if list data is not available
   if (!list) {
@@ -181,6 +181,10 @@ export const List = ({
     await addItem(newItem);
   };
 
+  const handleRemoveItem = async (itemId: number) => {
+    await removeItem(itemId);
+  };
+
   return (
     <div
       style={{
@@ -249,6 +253,7 @@ export const List = ({
               onPlusClick={onPlusClick}
               onPlusTopClick={() => handlePlusTopClick(item.id)}
               onPlusBottomClick={() => handlePlusBottomClick(item.id)}
+              onRemoveItem={handleRemoveItem}
             />
           ))
         )}
