@@ -142,27 +142,31 @@ export const List = ({
         borderRadius: "8px",
         padding: "12px",
         backgroundColor: isDragOverContainer ? "#f8f9ff" : "white",
-        minHeight: "200px",
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
         transition: "all 0.2s ease",
       }}
       onDragOver={handleContainerDragOver}
       onDragLeave={handleContainerDragLeave}
       onDrop={handleContainerDrop}
     >
-      <h1>{name}</h1>
-      {list.items.map((item) => (
-        <ListItem 
-          key={item.id}
-          data={item}
-          isDragging={draggedItem?.id === item.id}
-          isDragOver={dragOverItem?.id === item.id}
-          onDragStart={(e) => handleDragStart(e, item.id)}
-          onDragOver={(e) => handleDragOver(e, item.id)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, item.id)}
-          onDragEnd={handleDragEnd}
-        />
-      ))}
+      <h1 style={{ margin: "0 0 12px 0", flexShrink: 0 }}>{name}</h1>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {list.items.map((item) => (
+          <ListItem 
+            key={item.id}
+            data={item}
+            isDragging={draggedItem?.id === item.id}
+            isDragOver={dragOverItem?.id === item.id}
+            onDragStart={(e) => handleDragStart(e, item.id)}
+            onDragOver={(e) => handleDragOver(e, item.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, item.id)}
+            onDragEnd={handleDragEnd}
+          />
+        ))}
+      </div>
     </div>
   );
 };

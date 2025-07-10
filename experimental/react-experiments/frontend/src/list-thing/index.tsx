@@ -34,9 +34,10 @@ export const ListThing = () => {
       padding: "10px 16px",
       display: "flex",
       gap: "10px",
+      boxSizing: "border-box",
     }}>
       {listIds.map((listId: number, listIndex: number) => (
-        <div key={listId} style={{ flex: 1 }}>
+        <div key={listId} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <List
             name={`List ${listIndex}`}
             listId={listId}
