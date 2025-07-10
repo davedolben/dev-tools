@@ -3,18 +3,53 @@ import { List } from "./list";
 import { useListManager } from "./list-data-hook";
 
 export const ListThing = () => {
-  const [listIds, setListIds] = useState<number[]>([]);
+  const [displayedListIds, setDisplayedListIds] = useState<number[]>([100]); // Start with only list ID 1
   const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Map<number, number>>(new Map()); // Map of listId -> selectedItemId
   const { getAllLists, moveItem } = useListManager();
 
-  // Initialize with existing lists
-  useEffect(() => {
-    const initializeLists = async () => {
-      const lists = await getAllLists();
-      setListIds(lists.map(list => list.id));
-    };
-    initializeLists();
-  }, [getAllLists]);
+  const handleItemSelect = async (itemId: number, listId: number) => {
+    // Check if the item is already selected
+    const currentlySelected = selectedItems.get(listId);
+    
+    if (currentlySelected === itemId) {
+      // Deselect the item
+      setSelectedItems(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(listId);
+        return newMap;
+      });
+      
+      // Find the index of the current list
+      const currentIndex = displayedListIds.indexOf(listId);
+      
+      // Remove all lists to the right of the current list
+      const newListIds = displayedListIds.slice(0, currentIndex + 1);
+      setDisplayedListIds(newListIds);
+      return;
+    }
+    
+    // Update the selected item for this list
+    setSelectedItems(prev => new Map(prev).set(listId, itemId));
+    
+    // Find the index of the current list
+    const currentIndex = displayedListIds.indexOf(listId);
+    
+    // Remove all lists to the right of the current list
+    const newListIds = displayedListIds.slice(0, currentIndex + 1);
+    
+    // Check if the selected item ID corresponds to another list
+    const allLists = await getAllLists();
+    const listExists = allLists.find(list => list.id === itemId);
+    
+    if (listExists && !newListIds.includes(itemId)) {
+      // Add the list to the right of the current list
+      newListIds.push(itemId);
+    }
+    
+    // Update the displayed list IDs
+    setDisplayedListIds(newListIds);
+  };
 
   const handleItemMove = async (fromListId: number, toListId: number, itemId: number, dropIndex: number) => {
     await moveItem(fromListId, toListId, itemId, dropIndex);
@@ -36,16 +71,17 @@ export const ListThing = () => {
       gap: "10px",
       boxSizing: "border-box",
     }}>
-      {listIds.map((listId: number, listIndex: number) => (
+      {displayedListIds.map((listId: number) => (
         <div key={listId} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <List
-            name={`List ${listIndex}`}
+            name={`List ${listId}`}
             listId={listId}
-            listIndex={listIndex}
             draggedItem={draggedItem}
             onItemMove={handleItemMove}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onItemSelect={handleItemSelect}
+            selectedItemId={selectedItems.get(listId)}
           />
         </div>
       ))}

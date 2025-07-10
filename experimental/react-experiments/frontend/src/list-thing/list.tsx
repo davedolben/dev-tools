@@ -4,21 +4,23 @@ import { ListItemData, useListData } from "./list-data-hook";
 export type ListProps = {
   name: string;
   listId: number;
-  listIndex: number;
   draggedItem: { id: number; fromListId: number } | null;
   onItemMove?: (fromListId: number, toListId: number, itemId: number, dropIndex: number) => void;
   onDragStart: (id: number, fromListId: number) => void;
   onDragEnd: () => void;
+  onItemSelect?: (itemId: number, listId: number) => void;
+  selectedItemId?: number;
 };
 
 export const List = ({ 
   name, 
   listId,
-  listIndex, 
   draggedItem, 
   onItemMove, 
   onDragStart, 
-  onDragEnd 
+  onDragEnd,
+  onItemSelect,
+  selectedItemId
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
@@ -28,6 +30,12 @@ export const List = ({
   if (!list) {
     return <div>Loading...</div>;
   }
+
+  const handleItemClick = (itemId: number) => {
+    if (onItemSelect) {
+      onItemSelect(itemId, listId);
+    }
+  };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
     onDragStart(id, listId);
@@ -47,6 +55,7 @@ export const List = ({
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, dropId: number) => {
     e.preventDefault();
+    e.stopPropagation(); // Stop event from bubbling up to container
     
     if (!draggedItem || draggedItem.id === dropId) {
       setDragOverItem(null);
@@ -159,11 +168,13 @@ export const List = ({
             data={item}
             isDragging={draggedItem?.id === item.id}
             isDragOver={dragOverItem?.id === item.id}
+            isSelected={selectedItemId === item.id}
             onDragStart={(e) => handleDragStart(e, item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, item.id)}
             onDragEnd={handleDragEnd}
+            onClick={() => handleItemClick(item.id)}
           />
         ))}
       </div>
@@ -175,42 +186,54 @@ type ListItemProps = {
   data: ListItemData;
   isDragging: boolean;
   isDragOver: boolean;
+  isSelected: boolean;
   onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
+  onClick: () => void;
 };
 
 const ListItem = ({ 
   data, 
   isDragging, 
   isDragOver, 
+  isSelected,
   onDragStart, 
   onDragOver, 
   onDragLeave, 
   onDrop,
-  onDragEnd
+  onDragEnd,
+  onClick
 }: ListItemProps) => {
   return (
     <div
       style={{
-        cursor: isDragging ? "grabbing" : "grab",
+        cursor: isSelected ? "default" : isDragging ? "grabbing" : "grab",
         padding: "8px 12px",
         border: "1px solid #ccc",
         borderRadius: "4px",
         marginBottom: "4px",
-        backgroundColor: isDragging ? "#f0f0f0" : isDragOver ? "#e8f4fd" : "white",
+        backgroundColor: isSelected 
+          ? "#e3f2fd" 
+          : isDragging 
+            ? "#f0f0f0" 
+            : isDragOver 
+              ? "#e8f4fd" 
+              : "white",
+        borderColor: isSelected ? "#2196f3" : "#ccc",
         opacity: isDragging ? 0.5 : 1,
         transition: "all 0.2s ease",
         position: "relative",
       }}
-      draggable
+      draggable={!isSelected}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onClick={onClick}
     >
       {data.name}
       {isDragOver && (
