@@ -14,6 +14,9 @@ type ListItemProps = {
   onClick: () => void;
   onUpdateItem?: (updates: Partial<ListItemData>) => Promise<void>;
   onPlusClick?: (itemId: number) => void;
+  onPlusTopClick?: (itemId: number) => void;
+  onPlusBottomClick?: (itemId: number) => void;
+  style?: React.CSSProperties;
 };
 
 export const ListItem = ({ 
@@ -28,10 +31,14 @@ export const ListItem = ({
   onDragEnd,
   onClick,
   onUpdateItem,
-  onPlusClick
+  onPlusClick,
+  onPlusTopClick,
+  onPlusBottomClick,
+  style
 }: ListItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(data.name);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -110,6 +117,20 @@ export const ListItem = ({
     }
   };
 
+  const handlePlusTopClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onPlusTopClick) {
+      onPlusTopClick(data.id);
+    }
+  };
+
+  const handlePlusBottomClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onPlusBottomClick) {
+      onPlusBottomClick(data.id);
+    }
+  };
+
   return (
     <div
       style={{
@@ -129,6 +150,7 @@ export const ListItem = ({
         opacity: isDragging ? 0.5 : 1,
         transition: "all 0.2s ease",
         position: "relative",
+        ...style
       }}
       draggable={!isSelected}
       onDragStart={onDragStart}
@@ -138,6 +160,8 @@ export const ListItem = ({
       onDragEnd={onDragEnd}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {isEditing ? (
         <input
@@ -206,6 +230,83 @@ export const ListItem = ({
           +
         </button>
       )}
+      
+      {/* Top center plus button */}
+      {isHovered && onPlusTopClick && (
+        <button
+          onClick={handlePlusTopClick}
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "-10px",
+            transform: "translateX(-50%)",
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            border: "1px solid #ccc",
+            backgroundColor: "white",
+            color: "#666",
+            fontSize: "14px",
+            lineHeight: "1",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.2s ease",
+            zIndex: 10,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#f0f0f0";
+            e.currentTarget.style.borderColor = "#999";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "white";
+            e.currentTarget.style.borderColor = "#ccc";
+          }}
+        >
+          +
+        </button>
+      )}
+      
+      {/* Bottom center plus button */}
+      {isHovered && onPlusBottomClick && (
+        <button
+          onClick={handlePlusBottomClick}
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: "-10px",
+            transform: "translateX(-50%)",
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            border: "1px solid #ccc",
+            backgroundColor: "white",
+            color: "#666",
+            fontSize: "14px",
+            lineHeight: "1",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.2s ease",
+            zIndex: 10,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#f0f0f0";
+            e.currentTarget.style.borderColor = "#999";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "white";
+            e.currentTarget.style.borderColor = "#ccc";
+          }}
+        >
+          +
+        </button>
+      )}
+      
       {isDragOver && (
         <div
           style={{

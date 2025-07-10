@@ -25,7 +25,7 @@ export const List = ({
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
-  const { list, updateList, updateItem } = useListData(listId);
+  const { list, updateList, updateItem, addItem } = useListData(listId);
 
   // Don't render if list data is not available
   if (!list) {
@@ -145,6 +145,42 @@ export const List = ({
     onDragEnd();
   };
 
+  const handlePlusTopClick = async (itemId: number) => {
+    const currentIndex = list.items.findIndex(item => item.id === itemId);
+    if (currentIndex === -1) return;
+
+    const newItem: ListItemData = {
+      id: 0, // This will be overridden by addItem
+      name: `New Item`,
+    };
+
+    // Add the new item above the current item
+    await addItem(newItem, currentIndex);
+  };
+
+  const handlePlusBottomClick = async (itemId: number) => {
+    const currentIndex = list.items.findIndex(item => item.id === itemId);
+    if (currentIndex === -1) return;
+
+    const newItem: ListItemData = {
+      id: 0, // This will be overridden by addItem
+      name: `New Item`,
+    };
+
+    // Add the new item below the current item
+    await addItem(newItem, currentIndex + 1);
+  };
+
+  const handleAddFirstItem = async () => {
+    const newItem: ListItemData = {
+      id: 0, // This will be overridden by addItem
+      name: `New Item`,
+    };
+
+    // Add the new item to the end of the list
+    await addItem(newItem);
+  };
+
   return (
     <div
       style={{
@@ -162,24 +198,60 @@ export const List = ({
       onDrop={handleContainerDrop}
     >
       <h1 style={{ margin: "0 0 12px 0", flexShrink: 0 }}>{list.name}</h1>
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        {list.items.map((item) => (
-          <ListItem 
-            key={item.id}
-            data={item}
-            isDragging={draggedItem?.id === item.id}
-            isDragOver={dragOverItem?.id === item.id}
-            isSelected={selectedItemId === item.id}
-            onDragStart={(e) => handleDragStart(e, item.id)}
-            onDragOver={(e) => handleDragOver(e, item.id)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, item.id)}
-            onDragEnd={handleDragEnd}
-            onClick={() => handleItemClick(item.id)}
-            onUpdateItem={async (updates) => updateItem(item.id, updates)}
-            onPlusClick={onPlusClick}
-          />
-        ))}
+      <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+        {list.items.length === 0 ? (
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#666",
+            flexDirection: "column",
+            gap: "12px"
+          }}>
+            <div style={{ fontSize: "14px" }}>No items in this list</div>
+            <button
+              onClick={handleAddFirstItem}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+                transition: "background-color 0.2s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#0056b3";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#007bff";
+              }}
+            >
+              Add First Item
+            </button>
+          </div>
+        ) : (
+          list.items.map((item, index) => (
+            <ListItem 
+              key={item.id}
+              data={item}
+              isDragging={draggedItem?.id === item.id}
+              isDragOver={dragOverItem?.id === item.id}
+              isSelected={selectedItemId === item.id}
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, item.id)}
+              onDragEnd={handleDragEnd}
+              onClick={() => handleItemClick(item.id)}
+              onUpdateItem={async (updates) => updateItem(item.id, updates)}
+              onPlusClick={onPlusClick}
+              onPlusTopClick={() => handlePlusTopClick(item.id)}
+              onPlusBottomClick={() => handlePlusBottomClick(item.id)}
+            />
+          ))
+        )}
       </div>
     </div>
   );

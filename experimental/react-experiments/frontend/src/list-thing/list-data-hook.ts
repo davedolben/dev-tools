@@ -185,19 +185,48 @@ class ListStateManager {
     }
   }
 
-  async addItem(listId: number, item: ListItemData): Promise<void> {
+  async addItem(listId: number, item: ListItemData, insertIndex?: number): Promise<ListItemData> {
+    console.log("addItem", listId, item, insertIndex);
     const listIndex = this._lists.findIndex(list => list.id === listId);
-    if (listIndex !== -1) {
-      this._lists[listIndex].items.push(item);
-      this.updateNumChildrenForList(listId);
-      this.notifyListListeners(listId);
+    if (listIndex === -1) {
+      throw new Error(`List ${listId} not found`);
     }
+
+    // Assign the item a new ID by finding the largest ID in the dataset and adding 1.
+    const newId = Math.max(...this._lists.flatMap(list => list.items.map(item => item.id))) + 1;
+    const newItem = { ...item, id: newId };
+    
+    if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= this._lists[listIndex].items.length) {
+      // Insert at specific position
+      this._lists[listIndex] = {
+        ...this._lists[listIndex],
+        items: [
+          ...this._lists[listIndex].items.slice(0, insertIndex),
+          newItem,
+          ...this._lists[listIndex].items.slice(insertIndex)
+        ]
+      };
+    } else {
+      // Add to end
+      this._lists[listIndex] = {
+        ...this._lists[listIndex],
+        items: [...this._lists[listIndex].items, newItem]
+      };
+    }
+
+    this.updateNumChildrenForList(listId);
+    this.notifyListListeners(listId);
+
+    return newItem;
   }
 
   async removeItem(listId: number, itemId: number): Promise<void> {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
-      this._lists[listIndex].items = this._lists[listIndex].items.filter(item => item.id !== itemId);
+      this._lists[listIndex] = {
+        ...this._lists[listIndex],
+        items: this._lists[listIndex].items.filter(item => item.id !== itemId)
+      };
       this.updateNumChildrenForList(listId);
       this.notifyListListeners(listId);
     }
@@ -213,13 +242,27 @@ class ListStateManager {
       
       if (itemIndex !== -1) {
         // Remove item from source list
-        const [movedItem] = fromList.items.splice(itemIndex, 1);
+        const movedItem = fromList.items[itemIndex];
+        this._lists[fromListIndex] = {
+          ...this._lists[fromListIndex],
+          items: fromList.items.filter(item => item.id !== itemId)
+        };
         
         // Add item to destination list at specific index or at the end
         if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= this._lists[toListIndex].items.length) {
-          this._lists[toListIndex].items.splice(targetIndex, 0, movedItem);
+          this._lists[toListIndex] = {
+            ...this._lists[toListIndex],
+            items: [
+              ...this._lists[toListIndex].items.slice(0, targetIndex),
+              movedItem,
+              ...this._lists[toListIndex].items.slice(targetIndex)
+            ]
+          };
         } else {
-          this._lists[toListIndex].items.push(movedItem);
+          this._lists[toListIndex] = {
+            ...this._lists[toListIndex],
+            items: [...this._lists[toListIndex].items, movedItem]
+          };
         }
         
         // Update numChildren for both lists
@@ -264,8 +307,8 @@ export const useListData = (listId: number) => {
     return manager.updateListItem(listId, itemId, updates);
   }, [manager, listId]);
 
-  const addItem = useCallback(async (item: ListItemData) => {
-    return manager.addItem(listId, item);
+  const addItem = useCallback(async (item: ListItemData, insertIndex?: number) => {
+    return manager.addItem(listId, item, insertIndex);
   }, [manager, listId]);
 
   const removeItem = useCallback(async (itemId: number) => {
