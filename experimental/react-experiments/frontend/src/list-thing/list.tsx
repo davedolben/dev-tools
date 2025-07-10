@@ -10,6 +10,7 @@ export type ListProps = {
   onDragEnd: () => void;
   onItemSelect?: (itemId: number, listId: number) => void;
   selectedItemId?: number;
+  onPlusClick?: (itemId: number) => void;
 };
 
 export const List = ({ 
@@ -19,7 +20,8 @@ export const List = ({
   onDragStart, 
   onDragEnd,
   onItemSelect,
-  selectedItemId
+  selectedItemId,
+  onPlusClick
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
@@ -175,6 +177,7 @@ export const List = ({
             onDragEnd={handleDragEnd}
             onClick={() => handleItemClick(item.id)}
             onUpdateItem={async (updates) => updateItem(item.id, updates)}
+            onPlusClick={onPlusClick}
           />
         ))}
       </div>

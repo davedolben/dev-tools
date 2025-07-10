@@ -62,7 +62,26 @@ class ListStateManager {
   }
 
   async getList(listId: number): Promise<ListData | undefined> {
-    return this._lists.find(list => list.id === listId);
+    const found = this._lists.find(list => list.id === listId);
+    if (found) {
+      return found;
+    }
+
+    // If the list doesn't exist but an item with this id exists, return an
+    // empty list with the item's name and ID.
+    const inList = this._lists.find(list => list.items.some(item => item.id === listId));
+    if (inList) {
+      const item = inList.items.find(item => item.id === listId);
+      if (item) {
+        return {
+          id: item.id,
+          name: item.name,
+          items: [],
+        };
+      }
+    }
+
+    return undefined;
   }
 
   subscribeToList(listId: number, listener: () => void): () => void {
@@ -117,11 +136,21 @@ class ListStateManager {
     }
   }
 
-  async addList(list: ListData): Promise<void> {
-    this._lists.push(list);
-    this.updateNumChildrenForList(list.id);
+  async addList(id: number): Promise<void> {
+    // If the list already exists, return.
+    if (this._lists.find(l => l.id === id)) {
+      return;
+    }
+
+    const newList = await this.getList(id);
+    if (!newList) {
+      throw new Error(`Item ${id} not found in any list`);
+    }
+
+    this._lists.push(newList);
+    this.updateNumChildrenForList(id);
     // Notify any existing listeners for this list
-    this.notifyListListeners(list.id);
+    this.notifyListListeners(id);
   }
 
   async removeList(listId: number): Promise<void> {
@@ -256,8 +285,8 @@ export const useListData = (listId: number) => {
 export const useListManager = () => {
   const manager = ListStateManager.getInstance();
 
-  const addList = useCallback(async (list: ListData) => {
-    return manager.addList(list);
+  const addList = useCallback(async (id: number) => {
+    return manager.addList(id);
   }, [manager]);
 
   const removeList = useCallback(async (listId: number) => {

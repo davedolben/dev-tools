@@ -13,6 +13,7 @@ type ListItemProps = {
   onDragEnd: () => void;
   onClick: () => void;
   onUpdateItem?: (updates: Partial<ListItemData>) => Promise<void>;
+  onPlusClick?: (itemId: number) => void;
 };
 
 export const ListItem = ({ 
@@ -26,7 +27,8 @@ export const ListItem = ({
   onDrop,
   onDragEnd,
   onClick,
-  onUpdateItem
+  onUpdateItem,
+  onPlusClick
 }: ListItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(data.name);
@@ -101,6 +103,13 @@ export const ListItem = ({
     }, 200);
   }, [isEditing, onClick]);
 
+  const handlePlusClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onPlusClick) {
+      onPlusClick(data.id);
+    }
+  };
+
   return (
     <div
       style={{
@@ -151,7 +160,7 @@ export const ListItem = ({
         <span>{data.name}</span>
       )}
       {
-        data.numChildren ?
+        data.numChildren != undefined ?
           <div style={{
               fontSize: "12px", color: "#666",
               position: "absolute",
@@ -163,6 +172,40 @@ export const ListItem = ({
           </div> :
           null
       }
+      {data.numChildren == undefined && onPlusClick && (
+        <button
+          onClick={handlePlusClick}
+          style={{
+            position: "absolute",
+            right: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            border: "1px solid #ccc",
+            backgroundColor: "white",
+            color: "#666",
+            fontSize: "14px",
+            lineHeight: "1",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#f0f0f0";
+            e.currentTarget.style.borderColor = "#999";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "white";
+            e.currentTarget.style.borderColor = "#ccc";
+          }}
+        >
+          +
+        </button>
+      )}
       {isDragOver && (
         <div
           style={{

@@ -6,7 +6,7 @@ export const ListThing = () => {
   const [displayedListIds, setDisplayedListIds] = useState<number[]>([100]); // Start with only list ID 1
   const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Map<number, number>>(new Map()); // Map of listId -> selectedItemId
-  const { getAllLists, moveItem } = useListManager();
+  const { getAllLists, moveItem, addList } = useListManager();
 
   const handleItemSelect = async (itemId: number, listId: number) => {
     // Check if the item is already selected
@@ -51,6 +51,22 @@ export const ListThing = () => {
     setDisplayedListIds(newListIds);
   };
 
+  const handlePlusClick = async (itemId: number) => {
+    // Find which list contains this item
+    const allLists = await getAllLists();
+    const containingList = allLists.find(list => 
+      list.items.some(item => item.id === itemId)
+    );
+    
+    if (!containingList) return;
+    
+    // Create a new list with the same ID as the item
+    await addList(itemId);
+    
+    // Now select the item (which will add the new list to displayedListIds
+    await handleItemSelect(itemId, containingList.id);
+  };
+
   const handleItemMove = async (fromListId: number, toListId: number, itemId: number, dropIndex: number) => {
     await moveItem(fromListId, toListId, itemId, dropIndex);
     setDraggedItem(null);
@@ -81,6 +97,7 @@ export const ListThing = () => {
             onDragEnd={handleDragEnd}
             onItemSelect={handleItemSelect}
             selectedItemId={selectedItems.get(listId)}
+            onPlusClick={handlePlusClick}
           />
         </div>
       ))}
