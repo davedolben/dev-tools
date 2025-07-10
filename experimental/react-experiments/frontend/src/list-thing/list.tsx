@@ -8,16 +8,28 @@ export type ListItemData = {
 export type ListProps = {
   name: string;
   items: ListItemData[];
+  listIndex: number;
+  draggedItem: { id: number; fromListIndex: number } | null;
   onItemsReorder?: (items: ListItemData[]) => void;
+  onItemMove?: (fromListIndex: number, toListIndex: number, itemId: number, dropIndex: number) => void;
+  onDragStart: (id: number, fromListIndex: number) => void;
+  onDragEnd: () => void;
 };
 
-export const List = ({ name, items, onItemsReorder }: ListProps) => {
-  const [listItems, setListItems] = useState<ListItemData[]>(items);
-  const [draggedItem, setDraggedItem] = useState<number | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<number | null>(null);
+export const List = ({ 
+  name, 
+  items, 
+  listIndex, 
+  draggedItem, 
+  onItemsReorder, 
+  onItemMove, 
+  onDragStart, 
+  onDragEnd 
+}: ListProps) => {
+  const [dragOverItem, setDragOverItem] = useState<{ id: number; listIndex: number } | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
-    setDraggedItem(id);
+    onDragStart(id, listIndex);
     e.dataTransfer.setData("text/plain", id.toString());
     e.dataTransfer.effectAllowed = "move";
   };
@@ -25,7 +37,7 @@ export const List = ({ name, items, onItemsReorder }: ListProps) => {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverItem(id);
+    setDragOverItem({ id, listIndex });
   };
 
   const handleDragLeave = () => {
@@ -35,48 +47,58 @@ export const List = ({ name, items, onItemsReorder }: ListProps) => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropId: number) => {
     e.preventDefault();
     
-    if (draggedItem === null || draggedItem === dropId) {
+    if (!draggedItem || draggedItem.id === dropId) {
       setDragOverItem(null);
-      setDraggedItem(null);
       return;
     }
 
-    const draggedIndex = listItems.findIndex(item => item.id === draggedItem);
-    const dropIndex = listItems.findIndex(item => item.id === dropId);
+    const dropIndex = items.findIndex(item => item.id === dropId);
     
-    if (draggedIndex === -1 || dropIndex === -1) {
+    if (dropIndex === -1) {
       setDragOverItem(null);
-      setDraggedItem(null);
       return;
     }
 
-    const newItems = [...listItems];
-    const [draggedItemData] = newItems.splice(draggedIndex, 1);
-    newItems.splice(dropIndex, 0, draggedItemData);
+    // If dropping in the same list, reorder
+    if (draggedItem.fromListIndex === listIndex) {
+      const draggedIndex = items.findIndex(item => item.id === draggedItem.id);
+      
+      if (draggedIndex === -1) {
+        setDragOverItem(null);
+        return;
+      }
+
+      const newItems = [...items];
+      const [draggedItemData] = newItems.splice(draggedIndex, 1);
+      newItems.splice(dropIndex, 0, draggedItemData);
+      
+      if (onItemsReorder) {
+        onItemsReorder(newItems);
+      }
+    } else {
+      // If dropping in a different list, move the item
+      if (onItemMove) {
+        onItemMove(draggedItem.fromListIndex, listIndex, draggedItem.id, dropIndex);
+      }
+    }
     
-    setListItems(newItems);
     setDragOverItem(null);
-    setDraggedItem(null);
-    
-    if (onItemsReorder) {
-      onItemsReorder(newItems);
-    }
   };
 
   const handleDragEnd = () => {
     setDragOverItem(null);
-    setDraggedItem(null);
+    onDragEnd();
   };
 
   return (
     <div>
       <h1>{name}</h1>
-      {listItems.map((item) => (
+      {items.map((item) => (
         <ListItem 
           key={item.id}
           data={item}
-          isDragging={draggedItem === item.id}
-          isDragOver={dragOverItem === item.id}
+          isDragging={draggedItem?.id === item.id}
+          isDragOver={dragOverItem?.id === item.id}
           onDragStart={(e) => handleDragStart(e, item.id)}
           onDragOver={(e) => handleDragOver(e, item.id)}
           onDragLeave={handleDragLeave}
