@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-
-export type ListItemData = {
-  id: number;
-  name: string;
-};
+import { ListItemData } from "./list-data-hook";
 
 export type ListProps = {
   name: string;
