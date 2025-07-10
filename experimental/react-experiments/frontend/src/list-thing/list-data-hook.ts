@@ -117,14 +117,28 @@ class ListStateManager {
 
     const numChildren = targetList.items.length;
     
+    let found: number | undefined;
+
     // Find all items across all lists that reference this list
-    this._lists.forEach(list => {
-      list.items.forEach(item => {
-        if (item.id === listId) {
-          item.numChildren = numChildren;
-        }
-      });
+    this._lists = this._lists.map(list => {
+      const hasMatchingItem = list.items.some(item => item.id === listId);
+      if (!hasMatchingItem) return list;
+
+      found = found || list.id;
+      
+      return {
+        ...list,
+        items: list.items.map(item =>
+          item.id === listId
+            ? { ...item, numChildren }
+            : item
+        )
+      };
     });
+
+    if (found) {
+      this.notifyListListeners(found);
+    }
   }
 
   async setList(listId: number, items: ListItemData[]): Promise<void> {
