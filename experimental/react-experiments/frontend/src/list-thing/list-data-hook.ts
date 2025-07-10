@@ -3,22 +3,25 @@ import { useState, useEffect, useCallback } from "react";
 const initialLists = [
   {
     id: 100,
+    name: "Initial List",
     items: [
-      { id: 101, name: "Item 100", numChildren: 3 },
+      { id: 101, name: "List 101", numChildren: 3 },
       { id: 2, name: "Item 2" },
       { id: 3, name: "Item 3" },
     ],
   },
   {
     id: 101,
+    name: "List 101",
     items: [
       { id: 4, name: "Item 4" },
-      { id: 102, name: "Item 102", numChildren: 3 },
+      { id: 102, name: "List 102", numChildren: 3 },
       { id: 6, name: "Item 6" },
     ],
   },
   {
     id: 102,
+    name: "List 102",
     items: [
       { id: 7, name: "Item 7" },
       { id: 8, name: "Item 8" },
@@ -35,6 +38,7 @@ export type ListItemData = {
 
 export type ListData = {
   id: number;
+  name: string;
   items: ListItemData[];
 };
 
@@ -131,9 +135,23 @@ class ListStateManager {
     if (listIndex !== -1) {
       const itemIndex = this._lists[listIndex].items.findIndex(item => item.id === itemId);
       if (itemIndex !== -1) {
-        this._lists[listIndex].items[itemIndex] = { ...this._lists[listIndex].items[itemIndex], ...updates };
+        const updatedItem = { ...this._lists[listIndex].items[itemIndex], ...updates };
+        // Replace the whole thing so any hooks depending on the list will re-render.
+        this._lists[listIndex] = {
+          ...this._lists[listIndex],
+          items: this._lists[listIndex].items.map(item => item.id === itemId ? updatedItem : item)
+        };
         this.updateNumChildrenForList(listId);
         this.notifyListListeners(listId);
+      }
+    }
+
+    // If the item is a list, update the name of the list.
+    if (updates.name) {
+      const listIndex = this._lists.findIndex(list => list.id === itemId);
+      if (listIndex !== -1) {
+        this._lists[listIndex] = { ...this._lists[listIndex], name: updates.name };
+        this.notifyListListeners(itemId);
       }
     }
   }

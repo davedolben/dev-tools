@@ -3,7 +3,6 @@ import { ListItemData, useListData } from "./list-data-hook";
 import { ListItem } from "./list-item";
 
 export type ListProps = {
-  name: string;
   listId: number;
   draggedItem: { id: number; fromListId: number } | null;
   onItemMove?: (fromListId: number, toListId: number, itemId: number, dropIndex: number) => void;
@@ -14,7 +13,6 @@ export type ListProps = {
 };
 
 export const List = ({ 
-  name, 
   listId,
   draggedItem, 
   onItemMove, 
@@ -25,7 +23,7 @@ export const List = ({
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
-  const { list, updateList } = useListData(listId);
+  const { list, updateList, updateItem } = useListData(listId);
 
   // Don't render if list data is not available
   if (!list) {
@@ -161,7 +159,7 @@ export const List = ({
       onDragLeave={handleContainerDragLeave}
       onDrop={handleContainerDrop}
     >
-      <h1 style={{ margin: "0 0 12px 0", flexShrink: 0 }}>{name}</h1>
+      <h1 style={{ margin: "0 0 12px 0", flexShrink: 0 }}>{list.name}</h1>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {list.items.map((item) => (
           <ListItem 
@@ -176,6 +174,7 @@ export const List = ({
             onDrop={(e) => handleDrop(e, item.id)}
             onDragEnd={handleDragEnd}
             onClick={() => handleItemClick(item.id)}
+            onUpdateItem={async (updates) => updateItem(item.id, updates)}
           />
         ))}
       </div>

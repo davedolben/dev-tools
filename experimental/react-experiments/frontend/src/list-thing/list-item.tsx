@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ListItemData } from "./list-data-hook";
 
 type ListItemProps = {
@@ -12,6 +12,7 @@ type ListItemProps = {
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
   onClick: () => void;
+  onUpdateItem?: (updates: Partial<ListItemData>) => Promise<void>;
 };
 
 export const ListItem = ({ 
@@ -24,8 +25,82 @@ export const ListItem = ({
   onDragLeave, 
   onDrop,
   onDragEnd,
-  onClick
+  onClick,
+  onUpdateItem
 }: ListItemProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(data.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update edit value when data.name changes
+  useEffect(() => {
+    setEditValue(data.name);
+  }, [data.name]);
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Clear any pending click timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (editValue.trim() !== data.name && onUpdateItem) {
+      await onUpdateItem({ name: editValue.trim() });
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(data.name); // Reset to original value
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (isEditing) {
+      e.stopPropagation();
+      return;
+    }
+    
+    // Debounce the click to avoid conflicts with double-click
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    
+    clickTimeoutRef.current = setTimeout(() => {
+      onClick();
+    }, 200);
+  }, [isEditing, onClick]);
+
   return (
     <div
       style={{
@@ -52,9 +127,29 @@ export const ListItem = ({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      onClick={onClick}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
-      {data.name}
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: "100%",
+            border: "none",
+            outline: "none",
+            backgroundColor: "transparent",
+            fontSize: "inherit",
+            fontFamily: "inherit",
+          }}
+        />
+      ) : (
+        <span>{data.name}</span>
+      )}
       {
         data.numChildren ?
           <div style={{

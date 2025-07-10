@@ -74,7 +74,6 @@ export const ListThing = () => {
       {displayedListIds.map((listId: number) => (
         <div key={listId} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <List
-            name={`List ${listId}`}
             listId={listId}
             draggedItem={draggedItem}
             onItemMove={handleItemMove}
