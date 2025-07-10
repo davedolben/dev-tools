@@ -21,6 +21,7 @@ export const List = ({
   onDragEnd 
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
+  const [isDragOverContainer, setIsDragOverContainer] = useState(false);
   const { list, updateList } = useListData(listId);
 
   // Don't render if list data is not available
@@ -83,13 +84,71 @@ export const List = ({
     setDragOverItem(null);
   };
 
+  const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setIsDragOverContainer(true);
+  };
+
+  const handleContainerDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Only set to false if we're leaving the container entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOverContainer(false);
+    }
+  };
+
+  const handleContainerDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    
+    if (!draggedItem) {
+      setIsDragOverContainer(false);
+      return;
+    }
+
+    // If dropping in the same list, reorder to the end
+    if (draggedItem.fromListId === listId) {
+      const draggedIndex = list.items.findIndex(item => item.id === draggedItem.id);
+      
+      if (draggedIndex === -1) {
+        setIsDragOverContainer(false);
+        return;
+      }
+
+      const newItems = [...list.items];
+      const [draggedItemData] = newItems.splice(draggedIndex, 1);
+      newItems.push(draggedItemData); // Add to end
+      
+      await updateList(newItems);
+    } else {
+      // If dropping in a different list, move the item to the end
+      if (onItemMove) {
+        onItemMove(draggedItem.fromListId, listId, draggedItem.id, list.items.length);
+      }
+    }
+    
+    setIsDragOverContainer(false);
+  };
+
   const handleDragEnd = () => {
     setDragOverItem(null);
+    setIsDragOverContainer(false);
     onDragEnd();
   };
 
   return (
-    <div>
+    <div
+      style={{
+        border: isDragOverContainer ? "2px dashed #007bff" : "1px solid #ccc",
+        borderRadius: "8px",
+        padding: "12px",
+        backgroundColor: isDragOverContainer ? "#f8f9ff" : "white",
+        minHeight: "200px",
+        transition: "all 0.2s ease",
+      }}
+      onDragOver={handleContainerDragOver}
+      onDragLeave={handleContainerDragLeave}
+      onDrop={handleContainerDrop}
+    >
       <h1>{name}</h1>
       {list.items.map((item) => (
         <ListItem 
