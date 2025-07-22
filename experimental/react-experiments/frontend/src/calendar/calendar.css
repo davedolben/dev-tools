@@ -231,4 +231,20 @@
 
 .delete-event-button:hover {
   color: #ff4444;
+}
+
+.event-end-handle {
+  background: rgba(0,0,0,0.15);
+  border-radius: 0 4px 4px 0;
+  width: 10px;
+  min-width: 10px;
+  height: 20px;
+  display: inline-block;
+  float: right;
+  cursor: ew-resize;
+  margin-left: 2px;
+  transition: background 0.2s;
+}
+.event-end-handle:hover, .event-end-handle:active, .event-end-handle:focus {
+  background: rgba(0,0,0,0.3);
 } 

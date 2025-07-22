@@ -16,7 +16,7 @@ interface MonthViewProps {
   processedEventsMap: Map<string, ProcessedEvent[]>;
   onDateClick: (date: Date) => void;
   onEventClick: (event: Event, e: React.MouseEvent) => void;
-  onDragStart: (event: React.DragEvent, eventItem: Event) => void;
+  onDragStart: (event: React.DragEvent, eventItem: Event, type: 'move' | 'resize') => void;
   onDragOver: (event: React.DragEvent, date: Date) => void;
   onDragLeave: () => void;
   onDrop: (event: React.DragEvent, date: Date) => void;
@@ -85,7 +85,7 @@ const MonthView: React.FC<MonthViewProps> = ({
                       }`}
                       style={event.color ? { '--event-color': event.color } as React.CSSProperties : undefined}
                       draggable
-                      onDragStart={(e) => onDragStart(e, event)}
+                      onDragStart={(e) => onDragStart(e, event, 'move')}
                       onDragEnd={onDragEnd}
                       onClick={(e) => onEventClick(event, e)}
                     >
@@ -93,6 +93,23 @@ const MonthView: React.FC<MonthViewProps> = ({
                         <div className="event-content">
                           <span className="event-description">{event.description}</span>
                         </div>
+                      )}
+                      {
+                        // Add some spacing to push the end handle to the right, if the content
+                        // block isn't already doing that.
+                        event.isEventEnd && !event.isEventStart && (
+                          <div style={{ flex: 1 }}> &nbsp; </div>
+                        )
+                      }
+                      {event.isEventEnd && (
+                        <div
+                          className="event-end-handle"
+                          draggable
+                          onDragStart={(e) => onDragStart(e, event, 'resize')}
+                          onDragEnd={onDragEnd}
+                          style={{ cursor: 'ew-resize', width: 10, minWidth: 10, height: 20, display: 'inline-block', float: 'right' }}
+                          title="Drag to resize event end date"
+                        />
                       )}
                     </div>
                   ) : (
@@ -138,6 +155,9 @@ const Calendar: React.FC<CalendarProps> = ({
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>(undefined);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+  // New state for resizing
+  const [resizingEvent, setResizingEvent] = useState<Event | null>(null);
+  const [resizeDragOverDate, setResizeDragOverDate] = useState<Date | null>(null);
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
@@ -252,9 +272,14 @@ const Calendar: React.FC<CalendarProps> = ({
     return processedEventsMap;
   };
 
-  const handleDragStart = (event: React.DragEvent, eventItem: Event) => {
-    setDraggedEvent(eventItem);
-    event.dataTransfer.setData('text/plain', eventItem.id);
+  const handleDragStart = (event: React.DragEvent, eventItem: Event, type: 'move' | 'resize' = 'move') => {
+    if (type === 'resize') {
+      setResizingEvent(eventItem);
+      event.dataTransfer.setData('text/plain', eventItem.id + ':resize');
+    } else {
+      setDraggedEvent(eventItem);
+      event.dataTransfer.setData('text/plain', eventItem.id);
+    }
     event.dataTransfer.effectAllowed = 'move';
     const target = event.target as HTMLElement;
     target.classList.add('dragging');
@@ -272,6 +297,39 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const handleDrop = (event: React.DragEvent, targetDate: Date) => {
     event.preventDefault();
+    // Check if this is a resize drag
+    if (resizingEvent) {
+      const eventToResize = resizingEvent;
+      if (!eventToResize) return;
+      if (eventToResize.date > targetDate) {
+        // Don't allow the event to be resized to a date before its start date.
+        return;
+      }
+      // Compute new length
+      let newLength = 1;
+      if (eventToResize.skipWeekends) {
+        let current = new Date(eventToResize.date);
+        let count = 0;
+        let forward = current <= targetDate;
+        while (true) {
+          if (!isWeekend(current)) count++;
+          if (isSameDay(current, targetDate)) break;
+          current = addDays(current, forward ? 1 : -1);
+        }
+        newLength = count;
+      } else {
+        newLength = Math.abs(Math.round((targetDate.getTime() - eventToResize.date.getTime()) / (1000*60*60*24))) + 1;
+      }
+      if (newLength >= 1 && newLength !== eventToResize.length) {
+        onEditEvent?.({ ...eventToResize, length: newLength });
+      }
+      setResizingEvent(null);
+      setResizeDragOverDate(null);
+      setDraggedEvent(null);
+      setDragOverDate(null);
+      return;
+    }
+    // Otherwise, it's a move
     if (draggedEvent) {
       onDrop?.(draggedEvent.id, targetDate);
       setDraggedEvent(null);
