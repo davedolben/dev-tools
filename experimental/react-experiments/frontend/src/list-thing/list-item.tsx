@@ -148,6 +148,7 @@ export const ListItem = ({
         border: "1px solid #ccc",
         borderRadius: "4px",
         marginBottom: "4px",
+        height: "20px",  // Make the height consistent whether or not the buttons are rendered
         backgroundColor: isSelected 
           ? "#e3f2fd" 
           : isDragging 

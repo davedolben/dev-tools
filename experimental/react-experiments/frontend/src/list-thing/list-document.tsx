@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { List } from "./list";
 import { useListManager } from "./list-data-hook";
 
@@ -7,10 +8,52 @@ export type ListDocumentProps = {
 };
 
 export const ListDocument = ({ listId }: ListDocumentProps) => {
-  const [displayedParentIds, setDisplayedParentIds] = useState<number[]>([-1]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Map<number, number>>(new Map()); // Map of listId -> selectedItemId
   const { getAllLists, moveItem, addList } = useListManager(listId);
+
+  // Parse displayed parent IDs from URL, with -1 as implicit first item
+  const getDisplayedParentIds = (): number[] => {
+    const urlParentIds = searchParams.get('parents');
+    if (!urlParentIds) {
+      return [-1]; // Default to just the root list
+    }
+    
+    const parsedIds = urlParentIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    const newParentIds = [-1, ...parsedIds]; // Always include -1 as the first item
+
+    // Make sure the selected items are consistent with the displayed parent IDs.
+    const newSelectedItems = new Map<number, number>();
+    let updatedSelectedItems = false;
+    for (let i = 0; i < newParentIds.length-1; i++) {
+      const parentId = newParentIds[i];
+      const nextParentId = newParentIds[i+1];
+      if (selectedItems.get(parentId) !== nextParentId) {
+        newSelectedItems.set(parentId, nextParentId);
+        updatedSelectedItems = true;
+      }
+    }
+    if (updatedSelectedItems) {
+      setSelectedItems(newSelectedItems);
+    }
+
+    return newParentIds;
+  };
+
+  // Update URL with displayed parent IDs (excluding the implicit -1)
+  const updateUrlWithParentIds = (parentIds: number[]) => {
+    const urlIds = parentIds.slice(1); // Remove the implicit -1
+    if (urlIds.length === 0) {
+      searchParams.delete('parents');
+    } else {
+      searchParams.set('parents', urlIds.join(','));
+    }
+    setSearchParams(searchParams);
+  };
+
+  // Get current displayed parent IDs
+  const displayedParentIds = getDisplayedParentIds();
 
   const handleItemSelect = async (itemId: number, parentId: number) => {
     // Check if the item is already selected
@@ -29,7 +72,7 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
       
       // Remove all lists to the right of the current list
       const newListIds = displayedParentIds.slice(0, currentIndex + 1);
-      setDisplayedParentIds(newListIds);
+      updateUrlWithParentIds(newListIds);
       return;
     }
     
@@ -45,8 +88,8 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
     // Add the list to the right of the current list
     newListIds.push(itemId);
     
-    // Update the displayed list IDs
-    setDisplayedParentIds(newListIds);
+    // Update the URL with the new list IDs
+    updateUrlWithParentIds(newListIds);
   };
 
   const handlePlusClick = async (parentId: number, itemId: number) => {
