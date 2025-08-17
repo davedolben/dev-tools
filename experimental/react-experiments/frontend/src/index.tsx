@@ -43,7 +43,7 @@ const App = () => {
             <Route index element={<Main />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/commander" element={<CommanderPage />} />
-            <Route path="/list-thing" element={<ListThing />} />
+            <Route path="/list-thing/*" element={<ListThing />} />
           </Route>
         </Routes>
       </BrowserRouter>

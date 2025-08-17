@@ -1,10 +1,26 @@
 import React, { useState } from "react";
 import { ListDocument } from "./list-document";
 import { useListsData } from "./lists-data-hook";
-import { Link } from "react-router-dom";
+import { Link, Routes, Route, useParams } from "react-router-dom";
 
 export const ListThing = () => {
-  return <ListList />;
+  return (
+    <Routes>
+      <Route index element={<ListList />} />
+      <Route path="/:listId" element={<ListDetail />} />
+    </Routes>
+  );
+};
+
+const ListDetail = () => {
+  const { listId } = useParams();
+  const numericListId = parseInt(listId || "0", 10);
+  
+  if (isNaN(numericListId)) {
+    return <div>Invalid list ID</div>;
+  }
+  
+  return <ListDocument listId={numericListId} />;
 };
 
 export const ListList = () => {

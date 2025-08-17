@@ -8,6 +8,9 @@ module.exports = {
   entry: './src/index.tsx',
   output: {
     path: __dirname + '/../dist/frontend/',
+    // Need this for react router to work with multi-level routes (makes the dev
+    // server load main.js from the root).
+    publicPath: '/',
   },
   module: {
     rules: [
