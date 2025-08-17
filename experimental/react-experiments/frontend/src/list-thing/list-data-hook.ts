@@ -336,7 +336,7 @@ export const useListData = (listId: number, parentId: number) => {
   }, [manager, parentId]);
 
   const removeItem = useCallback(async (itemId: number) => {
-    return manager.removeItem(itemId, itemId);
+    return manager.removeItem(parentId, itemId);
   }, [manager, parentId]);
 
   return {
