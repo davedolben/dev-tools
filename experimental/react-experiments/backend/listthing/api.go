@@ -11,9 +11,10 @@ import (
 )
 
 type ListItem struct {
-	ID       int64      `json:"id"`
-	Name     string     `json:"name"`
-	Children []ListItem `json:"children"`
+	ID          int64      `json:"id"`
+	Name        string     `json:"name"`
+	NumChildren int        `json:"num_children"`
+	Children    []ListItem `json:"children"`
 }
 
 type List struct {
@@ -46,6 +47,7 @@ func SetupRoutes(r *gin.Engine, dbPath string) {
 		listGroup.POST("/list", CreateList)
 		listGroup.GET("/list/:listId", GetList)
 		listGroup.PUT("/list/:listId", UpdateList)
+		listGroup.GET("/list/:listId/item/:itemId", GetListItem)
 		listGroup.PUT("/list/:listId/item/:itemId", UpdateListItem)
 	}
 }
@@ -108,7 +110,26 @@ func CreateList(c *gin.Context) {
 func GetList(c *gin.Context) {
 	id := c.Param("listId")
 
+	// Get the list itself
 	rows, err := db.Query(`
+		SELECT id, name FROM lists WHERE id = ?
+	`, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var list List
+	for rows.Next() {
+		err = rows.Scan(&list.ID, &list.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	// Get the list's items
+	rows, err = db.Query(`
 		SELECT
 			id,
 			name
@@ -121,7 +142,6 @@ func GetList(c *gin.Context) {
 		return
 	}
 
-	var list List
 	for rows.Next() {
 		var item ListItem
 		err = rows.Scan(&item.ID, &item.Name)
@@ -205,6 +225,61 @@ func UpdateList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, list)
+}
+
+func GetListItem(c *gin.Context) {
+	itemID := c.Param("itemId")
+	listID := c.Param("listId")
+
+	// Get the item itself
+	rows, err := db.Query(`
+		SELECT id, name FROM list_items
+		WHERE id = ? AND list_id = ?
+	`, itemID, listID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var item ListItem
+	for rows.Next() {
+		err = rows.Scan(&item.ID, &item.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	// Get the item's children
+	rows, err = db.Query(`
+		SELECT
+			id,
+			name,
+			(
+				SELECT COUNT(*)
+				FROM list_items
+				WHERE parent_id = list_items.id
+			) as num_children
+		FROM list_items
+		WHERE parent_id = ?
+		ORDER BY rank ASC
+	`, itemID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for rows.Next() {
+		var child ListItem
+		err = rows.Scan(&child.ID, &child.Name, &child.NumChildren)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		item.Children = append(item.Children, child)
+	}
+
+	c.JSON(http.StatusOK, item)
 }
 
 // updateItems updates the items of a parent (either a list for top-level items or a list item for children)
@@ -332,8 +407,8 @@ func UpdateListItem(c *gin.Context) {
 	}
 
 	var request struct {
-		Name     string  `json:"name" binding:"required"`
-		Children []int64 `json:"children"`
+		Name     string   `json:"name" binding:"required"`
+		Children *[]int64 `json:"children"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -380,10 +455,13 @@ func UpdateListItem(c *gin.Context) {
 		return
 	}
 
-	// Update the item's children using the helper function
-	if err := updateItems(tx, listID, &itemID, request.Children); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Only update the children array if it's non-nil (which could include a zero-length array).
+	if request.Children != nil {
+		// Update the item's children using the helper function
+		if err := updateItems(tx, listID, &itemID, *request.Children); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	// Commit the transaction

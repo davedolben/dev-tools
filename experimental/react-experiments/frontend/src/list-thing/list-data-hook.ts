@@ -46,42 +46,57 @@ export type ListItemData = {
 class ListStateManager {
   private static instance: ListStateManager;
   private listeners: Map<number, Set<() => void>> = new Map();
-  private _lists: ListItemData[] = initialLists;
+  private _lists: Map<number, ListItemData> = new Map();
+  private listId: number | undefined;
 
-  private constructor() {}
+  // Deprecated.
+  private deprecatedLists: ListItemData[] = initialLists;
 
-  static getInstance(): ListStateManager {
+  private constructor(listId: number) {
+    this.listId = listId;
+  }
+
+  static getInstance(listId: number): ListStateManager {
     if (!ListStateManager.instance) {
-      ListStateManager.instance = new ListStateManager();
+      ListStateManager.instance = new ListStateManager(listId);
+    }
+    if (ListStateManager.instance.listId !== listId) {
+      throw new Error(`ListStateManager already initialized with a different listId ${ListStateManager.instance.listId}`);
     }
     return ListStateManager.instance;
   }
 
   get lists(): ListItemData[] {
-    return this._lists;
+    return this.deprecatedLists;
   }
 
-  async getList(listId: number): Promise<ListItemData | undefined> {
-    const found = this._lists.find(list => list.id === listId);
-    if (found) {
-      return found;
-    }
-
-    // If the list doesn't exist but an item with this id exists, return an
-    // empty list with the item's name and ID.
-    const inList = this._lists.find(list => list.items.some(item => item.id === listId));
-    if (inList) {
-      const item = inList.items.find(item => item.id === listId);
-      if (item) {
-        return {
-          id: item.id,
-          name: item.name,
-          items: [],
-        };
+  async getListItem(itemId: number): Promise<ListItemData | undefined> {
+    let data: ListItemData | undefined;
+    if (itemId === -1) {
+      const response = await fetch(`/api/lists/list/${this.listId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch list ${this.listId}: ${response.statusText}`);
       }
+      data = await response.json();
+    } else {
+      const response = await fetch(`/api/lists/list/${this.listId}/item/${itemId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch item ${itemId} from list ${this.listId}: ${response.statusText}`);
+      }
+      data = await response.json();
     }
 
-    return undefined;
+    if (!data) {
+      throw new Error(`Failed to fetch item ${itemId} from list ${this.listId}`);
+    }
+
+    if (!data?.items) {
+      // The API returns null if there are no items, and it's annoying to get Go
+      // to return an empty array (maybe not?).
+      data.items = [];
+    }
+    this._lists.set(itemId, data);
+    return data;
   }
 
   subscribeToList(listId: number, listener: () => void): () => void {
@@ -103,16 +118,16 @@ class ListStateManager {
     };
   }
 
-  private notifyListListeners(listId: number): void {
-    const listListeners = this.listeners.get(listId);
-    if (listListeners) {
-      listListeners.forEach(listener => listener());
+  private notifyItemListeners(itemId: number): void {
+    const itemListeners = this.listeners.get(itemId);
+    if (itemListeners) {
+      itemListeners.forEach(listener => listener());
     }
   }
 
   // Helper method to update numChildren for items that reference a specific list
   private updateNumChildrenForList(listId: number): void {
-    const targetList = this._lists.find(list => list.id === listId);
+    const targetList = this.deprecatedLists.find(list => list.id === listId);
     if (!targetList) return;
 
     const numChildren = targetList.items.length;
@@ -120,7 +135,7 @@ class ListStateManager {
     let found: number | undefined;
 
     // Find all items across all lists that reference this list
-    this._lists = this._lists.map(list => {
+    this.deprecatedLists = this.deprecatedLists.map(list => {
       const hasMatchingItem = list.items.some(item => item.id === listId);
       if (!hasMatchingItem) return list;
 
@@ -137,145 +152,161 @@ class ListStateManager {
     });
 
     if (found) {
-      this.notifyListListeners(found);
+      this.notifyItemListeners(found);
     }
   }
 
   async setList(listId: number, items: ListChildData[]): Promise<void> {
-    const listIndex = this._lists.findIndex(list => list.id === listId);
+    const listIndex = this.deprecatedLists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
-      this._lists[listIndex] = { ...this._lists[listIndex], items };
+      this.deprecatedLists[listIndex] = { ...this.deprecatedLists[listIndex], items };
       this.updateNumChildrenForList(listId);
-      this.notifyListListeners(listId);
+      this.notifyItemListeners(listId);
     }
   }
 
   async addList(id: number): Promise<void> {
     // If the list already exists, return.
-    if (this._lists.find(l => l.id === id)) {
+    if (this.deprecatedLists.find(l => l.id === id)) {
       return;
     }
 
-    const newList = await this.getList(id);
+    const newList = await this.getListItem(id);
     if (!newList) {
       throw new Error(`Item ${id} not found in any list`);
     }
 
-    this._lists.push(newList);
+    this.deprecatedLists.push(newList);
     this.updateNumChildrenForList(id);
     // Notify any existing listeners for this list
-    this.notifyListListeners(id);
+    this.notifyItemListeners(id);
   }
 
   async removeList(listId: number): Promise<void> {
-    this._lists = this._lists.filter(list => list.id !== listId);
+    this.deprecatedLists = this.deprecatedLists.filter(list => list.id !== listId);
     // Clean up listeners for the removed list
     this.listeners.delete(listId);
   }
 
-  async updateListItem(listId: number, itemId: number, updates: Partial<ListChildData>): Promise<void> {
-    const listIndex = this._lists.findIndex(list => list.id === listId);
-    if (listIndex !== -1) {
-      const itemIndex = this._lists[listIndex].items.findIndex(item => item.id === itemId);
-      if (itemIndex !== -1) {
-        const updatedItem = { ...this._lists[listIndex].items[itemIndex], ...updates };
-        // Replace the whole thing so any hooks depending on the list will re-render.
-        this._lists[listIndex] = {
-          ...this._lists[listIndex],
-          items: this._lists[listIndex].items.map(item => item.id === itemId ? updatedItem : item)
-        };
-        this.updateNumChildrenForList(listId);
-        this.notifyListListeners(listId);
-      }
+  async updateListItem(parentId: number, itemId: number, updates: Pick<ListChildData, "name">): Promise<void> {
+    const response = await fetch(`/api/lists/list/${this.listId}/item/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        name: updates.name,
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update item ${itemId}: ${response.statusText}`);
     }
 
-    // If the item is a list, update the name of the list.
-    if (updates.name) {
-      const listIndex = this._lists.findIndex(list => list.id === itemId);
-      if (listIndex !== -1) {
-        this._lists[listIndex] = { ...this._lists[listIndex], name: updates.name };
-        this.notifyListListeners(itemId);
-      }
-    }
+    // Update the item in the cache (note that this will really only do something if the item is a list).
+    await this.getListItem(itemId);
+    // Also update the parent list in the cache.
+    await this.getListItem(parentId);
+    // Notify any listeners that the item has changed.
+    this.notifyItemListeners(itemId);
+    this.notifyItemListeners(parentId);
   }
 
-  async addItem(listId: number, item: ListChildData, insertIndex?: number): Promise<ListChildData> {
-    console.log("addItem", listId, item, insertIndex);
-    const listIndex = this._lists.findIndex(list => list.id === listId);
-    if (listIndex === -1) {
-      throw new Error(`List ${listId} not found`);
+  private async updateItemChildren(item: ListItemData): Promise<void> {
+    const url = item.id === -1 ? `/api/lists/list/${this.listId}` : `/api/lists/list/${this.listId}/item/${item.id}`;
+    const response = await fetch(url, {
+      method: "PUT",
+      body: JSON.stringify({
+        name: item.name,
+        items: item.items.map(item => item.id),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update item children for ${item.id}: ${response.statusText}`);
     }
 
-    // Assign the item a new ID by finding the largest ID in the dataset and adding 1.
-    const newId = Math.max(...this._lists.flatMap(list => list.items.map(item => item.id))) + 1;
-    const newItem = { ...item, id: newId };
-    
-    if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= this._lists[listIndex].items.length) {
+    // Update the item in the cache.
+    await this.getListItem(item.id);
+    // Notify any listeners that the item has changed.
+    this.notifyItemListeners(item.id);
+  }
+
+  async addItem(parentId: number, item: Omit<ListChildData, "id">, insertIndex?: number): Promise<void> {
+    console.log("addItem", parentId, item, insertIndex);
+
+    // Find the parent list.
+    const parentList = this._lists.get(parentId);
+    if (!parentList) {
+      throw new Error(`List ${parentId} not found`);
+    }
+
+    // Make sure the ID and children are zeroed out.
+    const toInsert: ListChildData = {
+      id: 0,
+      name: item.name,
+    };
+
+    let newItems: ListChildData[] = [];
+
+    if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= parentList.items.length) {
       // Insert at specific position
-      this._lists[listIndex] = {
-        ...this._lists[listIndex],
-        items: [
-          ...this._lists[listIndex].items.slice(0, insertIndex),
-          newItem,
-          ...this._lists[listIndex].items.slice(insertIndex)
-        ]
-      };
+      newItems = [
+        ...parentList.items.slice(0, insertIndex),
+        toInsert,
+        ...parentList.items.slice(insertIndex)
+      ];
     } else {
       // Add to end
-      this._lists[listIndex] = {
-        ...this._lists[listIndex],
-        items: [...this._lists[listIndex].items, newItem]
-      };
+      newItems = [...parentList.items, toInsert];
     }
 
-    this.updateNumChildrenForList(listId);
-    this.notifyListListeners(listId);
-
-    return newItem;
+    await this.updateItemChildren({
+      id: parentId,
+      name: parentList.name,
+      items: newItems,
+    });
   }
 
   async removeItem(listId: number, itemId: number): Promise<void> {
-    const listIndex = this._lists.findIndex(list => list.id === listId);
+    const listIndex = this.deprecatedLists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
-      this._lists[listIndex] = {
-        ...this._lists[listIndex],
-        items: this._lists[listIndex].items.filter(item => item.id !== itemId)
+      this.deprecatedLists[listIndex] = {
+        ...this.deprecatedLists[listIndex],
+        items: this.deprecatedLists[listIndex].items.filter(item => item.id !== itemId)
       };
       this.updateNumChildrenForList(listId);
-      this.notifyListListeners(listId);
+      this.notifyItemListeners(listId);
     }
   }
 
   async moveItem(fromListId: number, toListId: number, itemId: number, targetIndex?: number): Promise<void> {
-    const fromListIndex = this._lists.findIndex(list => list.id === fromListId);
-    const toListIndex = this._lists.findIndex(list => list.id === toListId);
+    const fromListIndex = this.deprecatedLists.findIndex(list => list.id === fromListId);
+    const toListIndex = this.deprecatedLists.findIndex(list => list.id === toListId);
     
     if (fromListIndex !== -1 && toListIndex !== -1) {
-      const fromList = this._lists[fromListIndex];
+      const fromList = this.deprecatedLists[fromListIndex];
       const itemIndex = fromList.items.findIndex(item => item.id === itemId);
       
       if (itemIndex !== -1) {
         // Remove item from source list
         const movedItem = fromList.items[itemIndex];
-        this._lists[fromListIndex] = {
-          ...this._lists[fromListIndex],
+        this.deprecatedLists[fromListIndex] = {
+          ...this.deprecatedLists[fromListIndex],
           items: fromList.items.filter(item => item.id !== itemId)
         };
         
         // Add item to destination list at specific index or at the end
-        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= this._lists[toListIndex].items.length) {
-          this._lists[toListIndex] = {
-            ...this._lists[toListIndex],
+        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= this.deprecatedLists[toListIndex].items.length) {
+          this.deprecatedLists[toListIndex] = {
+            ...this.deprecatedLists[toListIndex],
             items: [
-              ...this._lists[toListIndex].items.slice(0, targetIndex),
+              ...this.deprecatedLists[toListIndex].items.slice(0, targetIndex),
               movedItem,
-              ...this._lists[toListIndex].items.slice(targetIndex)
+              ...this.deprecatedLists[toListIndex].items.slice(targetIndex)
             ]
           };
         } else {
-          this._lists[toListIndex] = {
-            ...this._lists[toListIndex],
-            items: [...this._lists[toListIndex].items, movedItem]
+          this.deprecatedLists[toListIndex] = {
+            ...this.deprecatedLists[toListIndex],
+            items: [...this.deprecatedLists[toListIndex].items, movedItem]
           };
         }
         
@@ -284,50 +315,50 @@ class ListStateManager {
         this.updateNumChildrenForList(toListId);
         
         // Notify listeners for both lists
-        this.notifyListListeners(fromListId);
-        this.notifyListListeners(toListId);
+        this.notifyItemListeners(fromListId);
+        this.notifyItemListeners(toListId);
       }
     }
   }
 }
 
-export const useListData = (listId: number) => {
+export const useListData = (listId: number, parentId: number) => {
   const [list, setList] = useState<ListItemData | undefined>(undefined);
-  const manager = ListStateManager.getInstance();
+  const manager = ListStateManager.getInstance(listId);
 
   useEffect(() => {
     // Initialize with current state
     const initializeList = async () => {
-      const currentList = await manager.getList(listId);
+      const currentList = await manager.getListItem(parentId);
       setList(currentList);
     };
     initializeList();
 
     // Subscribe to changes for this specific list
-    const unsubscribe = manager.subscribeToList(listId, async () => {
-      const updatedList = await manager.getList(listId);
+    const unsubscribe = manager.subscribeToList(parentId, async () => {
+      const updatedList = await manager.getListItem(parentId);
       setList(updatedList);
     });
 
     // Return a function to unsubscribe from the list so that the hook can be unmounted
     return unsubscribe;
-  }, [manager, listId]);
+  }, [manager, parentId]);
 
   const updateList = useCallback(async (items: ListChildData[]) => {
-    return manager.setList(listId, items);
-  }, [manager, listId]);
+    return manager.setList(parentId, items);
+  }, [manager, parentId]);
 
-  const updateItem = useCallback(async (itemId: number, updates: Partial<ListChildData>) => {
-    return manager.updateListItem(listId, itemId, updates);
-  }, [manager, listId]);
+  const updateItem = useCallback(async (parentId: number, itemId: number, updates: Pick<ListChildData, "name">) => {
+    return manager.updateListItem(parentId, itemId, updates);
+  }, [manager, parentId]);
 
   const addItem = useCallback(async (item: ListChildData, insertIndex?: number) => {
-    return manager.addItem(listId, item, insertIndex);
-  }, [manager, listId]);
+    return manager.addItem(parentId, item, insertIndex);
+  }, [manager, parentId]);
 
   const removeItem = useCallback(async (itemId: number) => {
-    return manager.removeItem(listId, itemId);
-  }, [manager, listId]);
+    return manager.removeItem(itemId, itemId);
+  }, [manager, parentId]);
 
   return {
     list,
@@ -338,9 +369,9 @@ export const useListData = (listId: number) => {
   };
 };
 
-// Global list management hook for operations that affect all lists
-export const useListManager = () => {
-  const manager = ListStateManager.getInstance();
+// Global list management hook for operations that affect items across the list hierarchy
+export const useListManager = (listId: number) => {
+  const manager = ListStateManager.getInstance(listId);
 
   const addList = useCallback(async (id: number) => {
     return manager.addList(id);

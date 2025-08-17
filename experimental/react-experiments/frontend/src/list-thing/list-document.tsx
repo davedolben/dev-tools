@@ -7,40 +7,40 @@ export type ListDocumentProps = {
 };
 
 export const ListDocument = ({ listId }: ListDocumentProps) => {
-  const [displayedListIds, setDisplayedListIds] = useState<number[]>([100]);
+  const [displayedParentIds, setDisplayedParentIds] = useState<number[]>([-1]);
   const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Map<number, number>>(new Map()); // Map of listId -> selectedItemId
-  const { getAllLists, moveItem, addList } = useListManager();
+  const { getAllLists, moveItem, addList } = useListManager(listId);
 
-  const handleItemSelect = async (itemId: number, listId: number) => {
+  const handleItemSelect = async (itemId: number, parentId: number) => {
     // Check if the item is already selected
-    const currentlySelected = selectedItems.get(listId);
+    const currentlySelected = selectedItems.get(parentId);
     
     if (currentlySelected === itemId) {
       // Deselect the item
       setSelectedItems(prev => {
         const newMap = new Map(prev);
-        newMap.delete(listId);
+        newMap.delete(parentId);
         return newMap;
       });
       
       // Find the index of the current list
-      const currentIndex = displayedListIds.indexOf(listId);
+      const currentIndex = displayedParentIds.indexOf(parentId);
       
       // Remove all lists to the right of the current list
-      const newListIds = displayedListIds.slice(0, currentIndex + 1);
-      setDisplayedListIds(newListIds);
+      const newListIds = displayedParentIds.slice(0, currentIndex + 1);
+      setDisplayedParentIds(newListIds);
       return;
     }
     
     // Update the selected item for this list
-    setSelectedItems(prev => new Map(prev).set(listId, itemId));
+    setSelectedItems(prev => new Map(prev).set(parentId, itemId));
     
     // Find the index of the current list
-    const currentIndex = displayedListIds.indexOf(listId);
+    const currentIndex = displayedParentIds.indexOf(parentId);
     
     // Remove all lists to the right of the current list
-    const newListIds = displayedListIds.slice(0, currentIndex + 1);
+    const newListIds = displayedParentIds.slice(0, currentIndex + 1);
     
     // Check if the selected item ID corresponds to another list
     const allLists = await getAllLists();
@@ -52,7 +52,7 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
     }
     
     // Update the displayed list IDs
-    setDisplayedListIds(newListIds);
+    setDisplayedParentIds(newListIds);
   };
 
   const handlePlusClick = async (itemId: number) => {
@@ -91,16 +91,17 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
       gap: "10px",
       boxSizing: "border-box",
     }}>
-      {displayedListIds.map((listId: number) => (
-        <div key={listId} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      {displayedParentIds.map((parentId: number) => (
+        <div key={parentId} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <List
             listId={listId}
+            parentId={parentId}
             draggedItem={draggedItem}
             onItemMove={handleItemMove}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onItemSelect={handleItemSelect}
-            selectedItemId={selectedItems.get(listId)}
+            selectedItemId={selectedItems.get(parentId)}
             onPlusClick={handlePlusClick}
           />
         </div>

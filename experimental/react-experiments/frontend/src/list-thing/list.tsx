@@ -4,6 +4,7 @@ import { ListItem } from "./list-item";
 
 export type ListProps = {
   listId: number;
+  parentId: number;
   draggedItem: { id: number; fromListId: number } | null;
   onItemMove?: (fromListId: number, toListId: number, itemId: number, dropIndex: number) => void;
   onDragStart: (id: number, fromListId: number) => void;
@@ -15,6 +16,7 @@ export type ListProps = {
 
 export const List = ({ 
   listId,
+  parentId,
   draggedItem, 
   onItemMove, 
   onDragStart, 
@@ -25,7 +27,7 @@ export const List = ({
 }: ListProps) => {
   const [dragOverItem, setDragOverItem] = useState<{ id: number; listId: number } | null>(null);
   const [isDragOverContainer, setIsDragOverContainer] = useState(false);
-  const { list, updateList, updateItem, addItem, removeItem } = useListData(listId);
+  const { list, updateList, updateItem, addItem, removeItem } = useListData(listId, parentId);
 
   // Don't render if list data is not available
   if (!list) {
@@ -34,12 +36,12 @@ export const List = ({
 
   const handleItemClick = (itemId: number) => {
     if (onItemSelect) {
-      onItemSelect(itemId, listId);
+      onItemSelect(itemId, parentId);
     }
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
-    onDragStart(id, listId);
+    onDragStart(id, parentId);
     e.dataTransfer.setData("text/plain", id.toString());
     e.dataTransfer.effectAllowed = "move";
   };
@@ -47,7 +49,7 @@ export const List = ({
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverItem({ id, listId });
+    setDragOverItem({ id, listId: parentId });
   };
 
   const handleDragLeave = () => {
@@ -71,7 +73,7 @@ export const List = ({
     }
 
     // If dropping in the same list, reorder using the hook
-    if (draggedItem.fromListId === listId) {
+    if (draggedItem.fromListId === parentId) {
       const draggedIndex = list.items.findIndex(item => item.id === draggedItem.id);
       
       if (draggedIndex === -1) {
@@ -87,7 +89,7 @@ export const List = ({
     } else {
       // If dropping in a different list, move the item
       if (onItemMove) {
-        onItemMove(draggedItem.fromListId, listId, draggedItem.id, dropIndex);
+        onItemMove(draggedItem.fromListId, parentId, draggedItem.id, dropIndex);
       }
     }
     
@@ -116,7 +118,7 @@ export const List = ({
     }
 
     // If dropping in the same list, reorder to the end
-    if (draggedItem.fromListId === listId) {
+    if (draggedItem.fromListId === parentId) {
       const draggedIndex = list.items.findIndex(item => item.id === draggedItem.id);
       
       if (draggedIndex === -1) {
@@ -132,7 +134,7 @@ export const List = ({
     } else {
       // If dropping in a different list, move the item to the end
       if (onItemMove) {
-        onItemMove(draggedItem.fromListId, listId, draggedItem.id, list.items.length);
+        onItemMove(draggedItem.fromListId, parentId, draggedItem.id, list.items.length);
       }
     }
     
@@ -249,7 +251,7 @@ export const List = ({
               onDrop={(e) => handleDrop(e, item.id)}
               onDragEnd={handleDragEnd}
               onClick={() => handleItemClick(item.id)}
-              onUpdateItem={async (updates) => updateItem(item.id, updates)}
+              onUpdateItem={async (updates) => updateItem(parentId, item.id, updates)}
               onPlusClick={onPlusClick}
               onPlusTopClick={() => handlePlusTopClick(item.id)}
               onPlusBottomClick={() => handlePlusBottomClick(item.id)}
