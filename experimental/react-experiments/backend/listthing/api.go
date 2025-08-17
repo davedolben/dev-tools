@@ -407,8 +407,8 @@ func UpdateListItem(c *gin.Context) {
 	}
 
 	var request struct {
-		Name     string   `json:"name" binding:"required"`
-		Children *[]int64 `json:"children"`
+		Name  string   `json:"name" binding:"required"`
+		Items *[]int64 `json:"items"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -456,9 +456,9 @@ func UpdateListItem(c *gin.Context) {
 	}
 
 	// Only update the children array if it's non-nil (which could include a zero-length array).
-	if request.Children != nil {
+	if request.Items != nil {
 		// Update the item's children using the helper function
-		if err := updateItems(tx, listID, &itemID, *request.Children); err != nil {
+		if err := updateItems(tx, listID, &itemID, *request.Items); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

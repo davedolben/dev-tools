@@ -78,6 +78,9 @@ class ListStateManager {
         throw new Error(`Failed to fetch list ${this.listId}: ${response.statusText}`);
       }
       data = await response.json();
+      // Make sure the ID is set to -1 (the API will return the list ID here
+      // rather than the item ID, which can cause some weirdness).
+      data!.id = -1;
     } else {
       const response = await fetch(`/api/lists/list/${this.listId}/item/${itemId}`);
       if (!response.ok) {
@@ -156,13 +159,16 @@ class ListStateManager {
     }
   }
 
-  async setList(listId: number, items: ListChildData[]): Promise<void> {
-    const listIndex = this.deprecatedLists.findIndex(list => list.id === listId);
-    if (listIndex !== -1) {
-      this.deprecatedLists[listIndex] = { ...this.deprecatedLists[listIndex], items };
-      this.updateNumChildrenForList(listId);
-      this.notifyItemListeners(listId);
+  async setList(parentId: number, items: ListChildData[]): Promise<void> {
+    const parent = this._lists.get(parentId);
+    if (!parent) {
+      throw new Error(`List ${parentId} not found`);
     }
+
+    await this.updateItemChildren({
+      ...parent,
+      items,
+    });
   }
 
   async addList(id: number): Promise<void> {
@@ -265,58 +271,31 @@ class ListStateManager {
     });
   }
 
-  async removeItem(listId: number, itemId: number): Promise<void> {
-    const listIndex = this.deprecatedLists.findIndex(list => list.id === listId);
-    if (listIndex !== -1) {
-      this.deprecatedLists[listIndex] = {
-        ...this.deprecatedLists[listIndex],
-        items: this.deprecatedLists[listIndex].items.filter(item => item.id !== itemId)
-      };
-      this.updateNumChildrenForList(listId);
-      this.notifyItemListeners(listId);
+  async removeItem(parentId: number, itemId: number): Promise<void> {
+    const parent = this._lists.get(parentId);
+    if (!parent) {
+      throw new Error(`List ${parentId} not found`);
     }
+
+    parent.items = parent.items.filter(item => item.id !== itemId);
+    await this.updateItemChildren(parent);
   }
 
-  async moveItem(fromListId: number, toListId: number, itemId: number, targetIndex?: number): Promise<void> {
-    const fromListIndex = this.deprecatedLists.findIndex(list => list.id === fromListId);
-    const toListIndex = this.deprecatedLists.findIndex(list => list.id === toListId);
+  async moveItem(fromParentId: number, toParentId: number, itemId: number, targetIndex?: number): Promise<void> {
+    const fromParent = this._lists.get(fromParentId);
+    const toParent = this._lists.get(toParentId);
     
-    if (fromListIndex !== -1 && toListIndex !== -1) {
-      const fromList = this.deprecatedLists[fromListIndex];
-      const itemIndex = fromList.items.findIndex(item => item.id === itemId);
+    if (fromParent && toParent) {
+      const itemIndex = fromParent.items.findIndex(item => item.id === itemId);
       
       if (itemIndex !== -1) {
+        const movedItem = fromParent.items[itemIndex];
+
         // Remove item from source list
-        const movedItem = fromList.items[itemIndex];
-        this.deprecatedLists[fromListIndex] = {
-          ...this.deprecatedLists[fromListIndex],
-          items: fromList.items.filter(item => item.id !== itemId)
-        };
+        await this.removeItem(fromParentId, itemId);
         
         // Add item to destination list at specific index or at the end
-        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= this.deprecatedLists[toListIndex].items.length) {
-          this.deprecatedLists[toListIndex] = {
-            ...this.deprecatedLists[toListIndex],
-            items: [
-              ...this.deprecatedLists[toListIndex].items.slice(0, targetIndex),
-              movedItem,
-              ...this.deprecatedLists[toListIndex].items.slice(targetIndex)
-            ]
-          };
-        } else {
-          this.deprecatedLists[toListIndex] = {
-            ...this.deprecatedLists[toListIndex],
-            items: [...this.deprecatedLists[toListIndex].items, movedItem]
-          };
-        }
-        
-        // Update numChildren for both lists
-        this.updateNumChildrenForList(fromListId);
-        this.updateNumChildrenForList(toListId);
-        
-        // Notify listeners for both lists
-        this.notifyItemListeners(fromListId);
-        this.notifyItemListeners(toListId);
+        await this.addItem(toParentId, movedItem, targetIndex);
       }
     }
   }
