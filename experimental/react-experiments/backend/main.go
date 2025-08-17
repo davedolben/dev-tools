@@ -10,6 +10,7 @@ import (
 
 	"github.com/davedolben/dev-tools/experimental/react-experiments/calendar"
 	"github.com/davedolben/dev-tools/experimental/react-experiments/commander"
+	"github.com/davedolben/dev-tools/experimental/react-experiments/listthing"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,7 @@ import (
 func main() {
 	fPort := flag.Int("port", 8100, "port to listen on")
 	fCalendarDBPath := flag.String("calendar-db", "calendar.db", "path to calendar database")
+	fListsDBPath := flag.String("lists-db", "lists.db", "path to lists database")
 	fStaticDir := flag.String("static-dir", "", "path to static files")
 	flag.Parse()
 
@@ -25,6 +27,7 @@ func main() {
 
 	// Setup routes
 	calendar.SetupRoutes(r, *fCalendarDBPath)
+	listthing.SetupRoutes(r, *fListsDBPath)
 	commander.SetupRoutes(r)
 
 	if *fStaticDir != "" {

@@ -30,23 +30,23 @@ const initialLists = [
   },
 ];
 
-export type ListItemData = {
+export type ListChildData = {
   id: number;
   name: string;
   numChildren?: number;
 };
 
-export type ListData = {
+export type ListItemData = {
   id: number;
   name: string;
-  items: ListItemData[];
+  items: ListChildData[];
 };
 
 // Shared state manager class
 class ListStateManager {
   private static instance: ListStateManager;
   private listeners: Map<number, Set<() => void>> = new Map();
-  private _lists: ListData[] = initialLists;
+  private _lists: ListItemData[] = initialLists;
 
   private constructor() {}
 
@@ -57,11 +57,11 @@ class ListStateManager {
     return ListStateManager.instance;
   }
 
-  get lists(): ListData[] {
+  get lists(): ListItemData[] {
     return this._lists;
   }
 
-  async getList(listId: number): Promise<ListData | undefined> {
+  async getList(listId: number): Promise<ListItemData | undefined> {
     const found = this._lists.find(list => list.id === listId);
     if (found) {
       return found;
@@ -141,7 +141,7 @@ class ListStateManager {
     }
   }
 
-  async setList(listId: number, items: ListItemData[]): Promise<void> {
+  async setList(listId: number, items: ListChildData[]): Promise<void> {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
       this._lists[listIndex] = { ...this._lists[listIndex], items };
@@ -173,7 +173,7 @@ class ListStateManager {
     this.listeners.delete(listId);
   }
 
-  async updateListItem(listId: number, itemId: number, updates: Partial<ListItemData>): Promise<void> {
+  async updateListItem(listId: number, itemId: number, updates: Partial<ListChildData>): Promise<void> {
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex !== -1) {
       const itemIndex = this._lists[listIndex].items.findIndex(item => item.id === itemId);
@@ -199,7 +199,7 @@ class ListStateManager {
     }
   }
 
-  async addItem(listId: number, item: ListItemData, insertIndex?: number): Promise<ListItemData> {
+  async addItem(listId: number, item: ListChildData, insertIndex?: number): Promise<ListChildData> {
     console.log("addItem", listId, item, insertIndex);
     const listIndex = this._lists.findIndex(list => list.id === listId);
     if (listIndex === -1) {
@@ -292,7 +292,7 @@ class ListStateManager {
 }
 
 export const useListData = (listId: number) => {
-  const [list, setList] = useState<ListData | undefined>(undefined);
+  const [list, setList] = useState<ListItemData | undefined>(undefined);
   const manager = ListStateManager.getInstance();
 
   useEffect(() => {
@@ -313,15 +313,15 @@ export const useListData = (listId: number) => {
     return unsubscribe;
   }, [manager, listId]);
 
-  const updateList = useCallback(async (items: ListItemData[]) => {
+  const updateList = useCallback(async (items: ListChildData[]) => {
     return manager.setList(listId, items);
   }, [manager, listId]);
 
-  const updateItem = useCallback(async (itemId: number, updates: Partial<ListItemData>) => {
+  const updateItem = useCallback(async (itemId: number, updates: Partial<ListChildData>) => {
     return manager.updateListItem(listId, itemId, updates);
   }, [manager, listId]);
 
-  const addItem = useCallback(async (item: ListItemData, insertIndex?: number) => {
+  const addItem = useCallback(async (item: ListChildData, insertIndex?: number) => {
     return manager.addItem(listId, item, insertIndex);
   }, [manager, listId]);
 

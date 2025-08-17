@@ -4,7 +4,7 @@ import "./style.css";
 import { BrowserRouter, Link, Outlet, Route, Routes } from "react-router-dom";
 import CalendarPage from "./calendar/index";
 import { CommanderPage } from "./commander/commander-page";
-import { ListThing } from "./list-thing";
+import { ListThing } from "./list-thing/index";
 
 const Layout = () => {
   return (

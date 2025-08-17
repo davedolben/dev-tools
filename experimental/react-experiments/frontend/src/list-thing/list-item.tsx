@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ListItemData } from "./list-data-hook";
+import { ListChildData } from "./list-data-hook";
 
 type ListItemProps = {
-  data: ListItemData;
+  data: ListChildData;
   isDragging: boolean;
   isDragOver: boolean;
   isSelected: boolean;
@@ -12,7 +12,7 @@ type ListItemProps = {
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
   onClick: () => void;
-  onUpdateItem?: (updates: Partial<ListItemData>) => Promise<void>;
+  onUpdateItem?: (updates: Partial<ListChildData>) => Promise<void>;
   onPlusClick?: (itemId: number) => void;
   onPlusTopClick?: (itemId: number) => void;
   onPlusBottomClick?: (itemId: number) => void;

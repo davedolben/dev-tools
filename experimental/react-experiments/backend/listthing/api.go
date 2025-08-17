@@ -42,11 +42,33 @@ func SetupRoutes(r *gin.Engine, dbPath string) {
 
 	listGroup := r.Group("/api/lists")
 	{
+		listGroup.GET("/", GetLists)
 		listGroup.POST("/list", CreateList)
-		listGroup.GET("/list/:id", GetList)
-		listGroup.PUT("/list/:id", UpdateList)
-		listGroup.PUT("/item/:id", UpdateListItem)
+		listGroup.GET("/list/:listId", GetList)
+		listGroup.PUT("/list/:listId", UpdateList)
+		listGroup.PUT("/list/:listId/item/:itemId", UpdateListItem)
 	}
+}
+
+func GetLists(c *gin.Context) {
+	rows, err := db.Query("SELECT id, name FROM lists")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var lists []List
+	for rows.Next() {
+		var list List
+		err = rows.Scan(&list.ID, &list.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		lists = append(lists, list)
+	}
+
+	c.JSON(http.StatusOK, lists)
 }
 
 func CreateList(c *gin.Context) {
@@ -84,7 +106,7 @@ func CreateList(c *gin.Context) {
 }
 
 func GetList(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("listId")
 
 	rows, err := db.Query(`
 		SELECT
@@ -114,7 +136,7 @@ func GetList(c *gin.Context) {
 }
 
 func UpdateList(c *gin.Context) {
-	listID := c.Param("id")
+	listID := c.Param("listId")
 	var request struct {
 		Name  string  `json:"name" binding:"required"`
 		Items []int64 `json:"items"`
@@ -293,12 +315,19 @@ func updateItems(tx *sql.Tx, listID int64, parentID *int64, itemIDs []int64) err
 }
 
 func UpdateListItem(c *gin.Context) {
-	itemIDStr := c.Param("id")
+	itemIDStr := c.Param("itemId")
+	listIDStr := c.Param("listId")
 
 	// Parse the ID for the response
 	itemID, err := strconv.ParseInt(itemIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid item ID"})
+		return
+	}
+
+	listID, err := strconv.ParseInt(listIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid list ID"})
 		return
 	}
 
@@ -312,9 +341,17 @@ func UpdateListItem(c *gin.Context) {
 		return
 	}
 
-	// Verify item exists
+	// Verify item exists and belongs to the list
 	var exists bool
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM list_items WHERE id = ?)", itemID).Scan(&exists)
+	err = db.QueryRow(
+		`SELECT EXISTS (
+			SELECT 1
+			FROM list_items
+			WHERE id = ? AND list_id = ?
+		)`,
+		itemID,
+		listID,
+	).Scan(&exists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify item"})
 		return
@@ -340,14 +377,6 @@ func UpdateListItem(c *gin.Context) {
 	`, request.Name, itemID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item: " + err.Error()})
-		return
-	}
-
-	// Get the list_id from the parent item
-	var listID int64
-	err = tx.QueryRow("SELECT list_id FROM list_items WHERE id = ?", itemID).Scan(&listID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get parent list_id: " + err.Error()})
 		return
 	}
 

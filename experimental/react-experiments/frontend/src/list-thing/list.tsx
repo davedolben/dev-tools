@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ListItemData, useListData } from "./list-data-hook";
+import { ListChildData, useListData } from "./list-data-hook";
 import { ListItem } from "./list-item";
 
 export type ListProps = {
@@ -149,7 +149,7 @@ export const List = ({
     const currentIndex = list.items.findIndex(item => item.id === itemId);
     if (currentIndex === -1) return;
 
-    const newItem: ListItemData = {
+    const newItem: ListChildData = {
       id: 0, // This will be overridden by addItem
       name: `New Item`,
     };
@@ -162,7 +162,7 @@ export const List = ({
     const currentIndex = list.items.findIndex(item => item.id === itemId);
     if (currentIndex === -1) return;
 
-    const newItem: ListItemData = {
+    const newItem: ListChildData = {
       id: 0, // This will be overridden by addItem
       name: `New Item`,
     };
@@ -172,7 +172,7 @@ export const List = ({
   };
 
   const handleAddFirstItem = async () => {
-    const newItem: ListItemData = {
+    const newItem: ListChildData = {
       id: 0, // This will be overridden by addItem
       name: `New Item`,
     };
