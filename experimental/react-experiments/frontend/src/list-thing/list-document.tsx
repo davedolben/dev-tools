@@ -25,16 +25,26 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
 
     // Make sure the selected items are consistent with the displayed parent IDs.
     const newSelectedItems = new Map<number, number>();
-    let updatedSelectedItems = false;
     for (let i = 0; i < newParentIds.length-1; i++) {
       const parentId = newParentIds[i];
       const nextParentId = newParentIds[i+1];
-      if (selectedItems.get(parentId) !== nextParentId) {
-        newSelectedItems.set(parentId, nextParentId);
-        updatedSelectedItems = true;
+      newSelectedItems.set(parentId, nextParentId);
+    }
+    // If newSelectedItems is different from selectedItems, update the selected items.
+    let different = false;
+    for (const [parentId, selectedItemId] of newSelectedItems) {
+      if (selectedItems.get(parentId) !== selectedItemId) {
+        different = true;
+        break;
       }
     }
-    if (updatedSelectedItems) {
+    for (const [parentId, selectedItemId] of selectedItems) {
+      if (!newSelectedItems.has(parentId)) {
+        different = true;
+        break;
+      }
+    }
+    if (different) {
       setSelectedItems(newSelectedItems);
     }
 
