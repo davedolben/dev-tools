@@ -1,35 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 
-const initialLists = [
-  {
-    id: 100,
-    name: "Initial List",
-    items: [
-      { id: 101, name: "List 101", numChildren: 3 },
-      { id: 2, name: "Item 2" },
-      { id: 3, name: "Item 3" },
-    ],
-  },
-  {
-    id: 101,
-    name: "List 101",
-    items: [
-      { id: 4, name: "Item 4" },
-      { id: 102, name: "List 102", numChildren: 3 },
-      { id: 6, name: "Item 6" },
-    ],
-  },
-  {
-    id: 102,
-    name: "List 102",
-    items: [
-      { id: 7, name: "Item 7" },
-      { id: 8, name: "Item 8" },
-      { id: 9, name: "Item 9" },
-    ],
-  },
-];
-
 export type ListChildData = {
   id: number;
   name: string;
@@ -49,9 +19,6 @@ class ListStateManager {
   private _lists: Map<number, ListItemData> = new Map();
   private listId: number | undefined;
 
-  // Deprecated.
-  private deprecatedLists: ListItemData[] = initialLists;
-
   private constructor(listId: number) {
     this.listId = listId;
   }
@@ -64,10 +31,6 @@ class ListStateManager {
       throw new Error(`ListStateManager already initialized with a different listId ${ListStateManager.instance.listId}`);
     }
     return ListStateManager.instance;
-  }
-
-  get lists(): ListItemData[] {
-    return this.deprecatedLists;
   }
 
   async getListItem(itemId: number): Promise<ListItemData | undefined> {
@@ -128,37 +91,6 @@ class ListStateManager {
     }
   }
 
-  // Helper method to update numChildren for items that reference a specific list
-  private updateNumChildrenForList(listId: number): void {
-    const targetList = this.deprecatedLists.find(list => list.id === listId);
-    if (!targetList) return;
-
-    const numChildren = targetList.items.length;
-    
-    let found: number | undefined;
-
-    // Find all items across all lists that reference this list
-    this.deprecatedLists = this.deprecatedLists.map(list => {
-      const hasMatchingItem = list.items.some(item => item.id === listId);
-      if (!hasMatchingItem) return list;
-
-      found = found || list.id;
-      
-      return {
-        ...list,
-        items: list.items.map(item =>
-          item.id === listId
-            ? { ...item, numChildren }
-            : item
-        )
-      };
-    });
-
-    if (found) {
-      this.notifyItemListeners(found);
-    }
-  }
-
   async setList(parentId: number, items: ListChildData[]): Promise<void> {
     const parent = this._lists.get(parentId);
     if (!parent) {
@@ -169,29 +101,6 @@ class ListStateManager {
       ...parent,
       items,
     });
-  }
-
-  async addList(id: number): Promise<void> {
-    // If the list already exists, return.
-    if (this.deprecatedLists.find(l => l.id === id)) {
-      return;
-    }
-
-    const newList = await this.getListItem(id);
-    if (!newList) {
-      throw new Error(`Item ${id} not found in any list`);
-    }
-
-    this.deprecatedLists.push(newList);
-    this.updateNumChildrenForList(id);
-    // Notify any existing listeners for this list
-    this.notifyItemListeners(id);
-  }
-
-  async removeList(listId: number): Promise<void> {
-    this.deprecatedLists = this.deprecatedLists.filter(list => list.id !== listId);
-    // Clean up listeners for the removed list
-    this.listeners.delete(listId);
   }
 
   async updateListItem(parentId: number, itemId: number, updates: Pick<ListChildData, "name">): Promise<void> {
@@ -358,26 +267,11 @@ export const useListData = (listId: number, parentId: number) => {
 export const useListManager = (listId: number) => {
   const manager = ListStateManager.getInstance(listId);
 
-  const addList = useCallback(async (id: number) => {
-    return manager.addList(id);
-  }, [manager]);
-
-  const removeList = useCallback(async (listId: number) => {
-    return manager.removeList(listId);
-  }, [manager]);
-
-  const getAllLists = useCallback(async () => {
-    return manager.lists;
-  }, [manager]);
-
   const moveItem = useCallback(async (fromListId: number, toListId: number, itemId: number, targetIndex?: number) => {
     return manager.moveItem(fromListId, toListId, itemId, targetIndex);
   }, [manager]);
 
   return {
-    addList,
-    removeList,
-    getAllLists,
     moveItem,
   };
 };

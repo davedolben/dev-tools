@@ -11,7 +11,7 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [draggedItem, setDraggedItem] = useState<{ id: number; fromListId: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Map<number, number>>(new Map()); // Map of listId -> selectedItemId
-  const { getAllLists, moveItem, addList } = useListManager(listId);
+  const { moveItem } = useListManager(listId);
 
   // Parse displayed parent IDs from URL, with -1 as implicit first item
   const getDisplayedParentIds = (): number[] => {
