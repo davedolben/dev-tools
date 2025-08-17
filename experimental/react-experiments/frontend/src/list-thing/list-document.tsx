@@ -42,33 +42,16 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
     // Remove all lists to the right of the current list
     const newListIds = displayedParentIds.slice(0, currentIndex + 1);
     
-    // Check if the selected item ID corresponds to another list
-    const allLists = await getAllLists();
-    const listExists = allLists.find(list => list.id === itemId);
-    
-    if (listExists && !newListIds.includes(itemId)) {
-      // Add the list to the right of the current list
-      newListIds.push(itemId);
-    }
+    // Add the list to the right of the current list
+    newListIds.push(itemId);
     
     // Update the displayed list IDs
     setDisplayedParentIds(newListIds);
   };
 
-  const handlePlusClick = async (itemId: number) => {
-    // Find which list contains this item
-    const allLists = await getAllLists();
-    const containingList = allLists.find(list => 
-      list.items.some(item => item.id === itemId)
-    );
-    
-    if (!containingList) return;
-    
-    // Create a new list with the same ID as the item
-    await addList(itemId);
-    
+  const handlePlusClick = async (parentId: number, itemId: number) => {
     // Now select the item (which will add the new list to displayedListIds
-    await handleItemSelect(itemId, containingList.id);
+    await handleItemSelect(itemId, parentId);
   };
 
   const handleItemMove = async (fromListId: number, toListId: number, itemId: number, dropIndex: number) => {
@@ -102,7 +85,7 @@ export const ListDocument = ({ listId }: ListDocumentProps) => {
             onDragEnd={handleDragEnd}
             onItemSelect={handleItemSelect}
             selectedItemId={selectedItems.get(parentId)}
-            onPlusClick={handlePlusClick}
+            onPlusClick={(itemId) => handlePlusClick(parentId, itemId)}
           />
         </div>
       ))}

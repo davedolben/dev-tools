@@ -13,8 +13,8 @@ import (
 type ListItem struct {
 	ID          int64      `json:"id"`
 	Name        string     `json:"name"`
-	NumChildren int        `json:"num_children"`
-	Children    []ListItem `json:"children"`
+	NumChildren int        `json:"numChildren"`
+	Children    []ListItem `json:"items"`
 }
 
 type List struct {
@@ -132,11 +132,17 @@ func GetList(c *gin.Context) {
 	rows, err = db.Query(`
 		SELECT
 			id,
-			name
+			name,
+			(
+				SELECT COUNT(*)
+				FROM list_items children
+				WHERE children.parent_id = list_items.id
+				AND list_id = ?
+			) as num_children
 		FROM list_items
 		WHERE list_id = ? AND parent_id IS NULL
 		ORDER BY rank ASC`,
-		id)
+		id, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -144,7 +150,7 @@ func GetList(c *gin.Context) {
 
 	for rows.Next() {
 		var item ListItem
-		err = rows.Scan(&item.ID, &item.Name)
+		err = rows.Scan(&item.ID, &item.Name, &item.NumChildren)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -257,13 +263,14 @@ func GetListItem(c *gin.Context) {
 			name,
 			(
 				SELECT COUNT(*)
-				FROM list_items
-				WHERE parent_id = list_items.id
+				FROM list_items children
+				WHERE children.parent_id = list_items.id
+				AND list_id = ?
 			) as num_children
 		FROM list_items
 		WHERE parent_id = ?
 		ORDER BY rank ASC
-	`, itemID)
+	`, listID, itemID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

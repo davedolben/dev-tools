@@ -277,6 +277,8 @@ class ListStateManager {
       throw new Error(`List ${parentId} not found`);
     }
 
+    // For now, we just orphan the item rather than deleting it. We should clean
+    // up orphaned items at some point.
     parent.items = parent.items.filter(item => item.id !== itemId);
     await this.updateItemChildren(parent);
   }

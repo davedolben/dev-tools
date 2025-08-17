@@ -238,7 +238,7 @@ export const ListItem = ({
         )}
 
         {/* Children count */}
-        {data.numChildren != undefined && (
+        {data.numChildren != undefined && data.numChildren > 0 && (
           <div style={{
             fontSize: "12px", 
             color: "#666",
@@ -252,7 +252,7 @@ export const ListItem = ({
         )}
 
         {/* Plus button */}
-        {data.numChildren == undefined && onPlusClick && (
+        {isHovered && (data.numChildren == undefined || data.numChildren === 0) && onPlusClick && (
           <button
             onClick={handlePlusClick}
             style={{
