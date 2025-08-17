@@ -235,7 +235,7 @@ class ListStateManager {
     this.notifyItemListeners(item.id);
   }
 
-  async addItem(parentId: number, item: Omit<ListChildData, "id">, insertIndex?: number): Promise<void> {
+  async addItem(parentId: number, item: ListChildData, insertIndex?: number): Promise<void> {
     console.log("addItem", parentId, item, insertIndex);
 
     // Find the parent list.
@@ -244,9 +244,9 @@ class ListStateManager {
       throw new Error(`List ${parentId} not found`);
     }
 
-    // Make sure the ID and children are zeroed out.
+    // Make sure the children are zeroed out.
     const toInsert: ListChildData = {
-      id: 0,
+      id: item.id,
       name: item.name,
     };
 
@@ -334,7 +334,11 @@ export const useListData = (listId: number, parentId: number) => {
   }, [manager, parentId]);
 
   const addItem = useCallback(async (item: ListChildData, insertIndex?: number) => {
-    return manager.addItem(parentId, item, insertIndex);
+    return manager.addItem(parentId, {
+      // Make sure the ID is zero so that the API will generate a new item.
+      id: 0,
+      name: item.name,
+    }, insertIndex);
   }, [manager, parentId]);
 
   const removeItem = useCallback(async (itemId: number) => {
