@@ -7,12 +7,11 @@
  * are reported by Apps Script as having no formula; those will be treated
  * as direct inputs due to Sheets API limitations.
  *
- * @param {boolean} clearColors - If true, clears background colors for all numeric cells
+ * @param {string} mode - 'inputs' to highlight only input cells, 'formulas' to highlight only formula cells, 'clear' to clear colors
  */
-function colorNumericCellsByOrigin(clearColors = false) {
+function colorNumericCellsByOrigin(mode = 'inputs') {
   const COLOR_FORMULA = '#e6e6e6'; // light grey
   const COLOR_INPUT   = '#cff6ff'; // light blue
-  const onlyColorInputs = true;
 
   const sheet = SpreadsheetApp.getActiveSheet();
   const range = sheet.getDataRange();
@@ -33,14 +32,18 @@ function colorNumericCellsByOrigin(clearColors = false) {
       const isDate = v instanceof Date;
       if (!isNumber || isDate) continue;
 
-      if (clearColors) {
+      const hasFormula = formulas[r][c] !== '';
+
+      if (mode === 'clear') {
         backgrounds[r][c] = null; // Clear the background color
-      } else {
-        const hasFormula = formulas[r][c] !== '';
-        if (onlyColorInputs && hasFormula) {
-          continue;
+      } else if (mode === 'inputs') {
+        if (!hasFormula) {
+          backgrounds[r][c] = COLOR_INPUT;
         }
-        backgrounds[r][c] = hasFormula ? COLOR_FORMULA : COLOR_INPUT;
+      } else if (mode === 'formulas') {
+        if (hasFormula) {
+          backgrounds[r][c] = COLOR_FORMULA;
+        }
       }
     }
   }
@@ -49,10 +52,24 @@ function colorNumericCellsByOrigin(clearColors = false) {
 }
 
 /**
+ * Wrapper function to highlight input cells (for menu item).
+ */
+function highlightInputCells() {
+  colorNumericCellsByOrigin('inputs');
+}
+
+/**
+ * Wrapper function to highlight formula cells (for menu item).
+ */
+function highlightFormulaCells() {
+  colorNumericCellsByOrigin('formulas');
+}
+
+/**
  * Wrapper function to clear colors for numeric cells (for menu item).
  */
 function clearNumericCellColors() {
-  colorNumericCellsByOrigin(true);
+  colorNumericCellsByOrigin('clear');
 }
 
 /**
@@ -61,7 +78,8 @@ function clearNumericCellColors() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Format helpers')
-    .addItem('Color numeric cells by origin', 'colorNumericCellsByOrigin')
+    .addItem('Highlight input cells', 'highlightInputCells')
+    .addItem('Highlight formula cells', 'highlightFormulaCells')
     .addItem('Clear numeric cell colors', 'clearNumericCellColors')
     .addToUi();
 }
