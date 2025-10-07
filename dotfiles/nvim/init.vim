@@ -8,6 +8,17 @@ set relativenumber
 
 set colorcolumn=100
 
+" Install plugins first
+" Open (n)vim and run :PlugInstall
+call plug#begin()
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.8' }
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvim-tree/nvim-tree.lua'
+Plug 'christoomey/vim-tmux-navigator'
+call plug#end()
+
 " Requires the file from lua/init.lua, which loads / configures a bunch of plugins
 lua require("init")
 

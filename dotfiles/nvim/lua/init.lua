@@ -16,9 +16,9 @@ require('telescope').setup{
 }
 require('telescope').load_extension('fzf');
 
-local lspconfig = require('lspconfig')
-lspconfig.ts_ls.setup{}
-lspconfig.gopls.setup{}
+-- These are equivalent to require('lspconfig').ts_ls.setup{}
+vim.lsp.config('ts_ls', {})
+vim.lsp.config('gopls', {})
 
 -- Disable LSP syntax highlighting for now, since it does some weird stuff with
 -- type imports in typescript.
