@@ -53,7 +53,7 @@ function runScenarioTable(options) {
     return { cell, formula: f, value: f ? null : cell.getValue() };
   });
 
-  // Read the entire scenario table
+  // Read the scenario table inputs
   const tableVals = tableRange.getValues();
   const totalRows = tableVals.length;
   const totalCols = tableVals[0].length;
@@ -66,6 +66,10 @@ function runScenarioTable(options) {
   // Column positions (0-based)
   const inputsStartCol = 0;
   const outputsStartCol = totalCols - M;
+
+  // Get the output columns range and read existing values
+  const outputRange = tableRange.offset(0, outputsStartCol, totalRows, M);
+  const outputVals = outputRange.getValues();
 
   const startRow = cfg.hasHeader ? 1 : 0;
   let rowsProcessed = 0;
@@ -90,16 +94,16 @@ function runScenarioTable(options) {
     // Read M outputs (same order as OutputCells range)
     const outputs = outputCells.map(c => c.getValue());
 
-    // Place M outputs into the last M columns of this row
+    // Store M outputs in the output array for this row
     for (let j = 0; j < M; j++) {
-      row[outputsStartCol + j] = outputs[j];
+      outputVals[r][j] = outputs[j];
     }
 
     rowsProcessed++;
   }
 
-  // Write updated table back in one go
-  tableRange.setValues(tableVals);
+  // Write only the output columns back (doesn't touch input columns)
+  outputRange.setValues(outputVals);
 
   // Restore original inputs (formula > value)
   origInputs.forEach(({ cell, formula, value }) => {
