@@ -51,6 +51,7 @@ if [ ! -z "$GOOS" ]; then
 fi
 
 build fileserver fileserver
+build filedrop filedrop
 build babysitter babysitter
 build notes notes-server
 build captains_chair captains-chair

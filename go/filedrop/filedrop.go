@@ -16,6 +16,7 @@ import (
 var (
   dropDirectory = flag.String("directory", ".", "Directory in which to drop files.")
   port = flag.Int("port", 8080, "Port to serve on.")
+	fHostname = flag.String("host", "", "Host to serve on.")
 )
 
 func ReceiveFile(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +59,7 @@ func main() {
 
   http.HandleFunc("/upload", ReceiveFile)
   http.Handle("/", http.FileServer(www.Assets))
-  host := fmt.Sprintf(":%d", *port)
+  host := fmt.Sprintf("%s:%d", *fHostname, *port)
   fmt.Printf("Serving at %s\n", host)
   http.ListenAndServe(host, nil)
 }
