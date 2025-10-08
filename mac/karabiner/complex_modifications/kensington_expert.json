@@ -1,0 +1,66 @@
+{
+  "title": "Kensington Expert modifications",
+  "rules": [
+    {
+      "description": "Toggle mouse scroll variable",
+      "manipulators": [
+        {
+          "type": "basic",
+          "conditions": [
+            {
+              "type": "variable_if",
+              "name": "scroll_with_mouse",
+              "value": 1
+            }
+          ],
+          "from": {
+            "pointing_button": "button3",
+            "modifiers": {
+              "optional": [ "any" ]
+            }
+          },
+          "to": [
+            {
+              "set_variable": {
+                "name": "scroll_with_mouse",
+                "value": 0
+              }
+            }
+          ]
+        },
+        {
+          "type": "basic",
+          "from": {
+            "pointing_button": "button3",
+            "modifiers": {
+              "optional": [ "any" ]
+            }
+          },
+          "to": [
+            {
+              "set_variable": {
+                "name": "scroll_with_mouse",
+                "value": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "mouse_motion_to_scroll",
+          "from": {
+            "modifiers": {
+              "optional": [ "any" ]
+            }
+          },
+          "conditions": [
+            {
+              "type": "variable_if",
+              "name": "scroll_with_mouse",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
