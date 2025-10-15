@@ -1,0 +1,62 @@
+{
+  "title": "Move mouse between screens",
+  "rules": [
+    {
+      "description": "1,2,3 simultaneously to move cursor between screens",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "simultaneous": [
+              { "key_code": "1" },
+              { "key_code": "2" },
+              { "key_code": "3" }
+            ],
+            "modifiers": {}
+          },
+          "conditions": [
+            { "type": "variable_if", "name": "on screen 0", "value": 0 }
+          ],
+          "to": [
+            { "set_variable": { "name": "on screen 0", "value": 1 } },
+            {
+              "software_function": {
+                "set_mouse_cursor_position": {
+                  "x": "50%",
+                  "y": "50%",
+                  "screen": 0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "basic",
+          "from": {
+            "simultaneous": [
+              { "key_code": "1" },
+              { "key_code": "2" },
+              { "key_code": "3" }
+            ],
+            "modifiers": {}
+          },
+          "conditions": [
+            { "type": "variable_if", "name": "on screen 0", "value": 1 }
+          ],
+          "to": [
+            { "set_variable": { "name": "on screen 0", "value": 0 } },
+            {
+              "software_function": {
+                "set_mouse_cursor_position": {
+                  "x": "50%",
+                  "y": "50%",
+                  "screen": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
