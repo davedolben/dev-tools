@@ -9,8 +9,9 @@
 git fetch -p
 # Prune remote refs
 git remote prune origin
-# Print out tracking branches whose remote refs are gone
-branches=$(git branch -vv | grep 'origin/.*: gone]' | awk '{print $1}')
+# Print out tracking branches whose remote refs are gone, filtering out the current branch (starts
+# with '*') and any branches active in a worktree (starts with '+')
+branches=$(git branch -vv | grep -v -e '^\+' -e '^\*' | grep 'origin/.*: gone]' | awk '{print $1}')
 
 echo ""
 echo "Found branches with deleted remote refs:"
