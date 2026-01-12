@@ -1,0 +1,1 @@
+../go/notes/add-note.sh
