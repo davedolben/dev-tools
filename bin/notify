@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+message="$1"
+title="$2"
+
+if [ -z "$message" ]; then
+  echo "Missing message"
+  exit 1
+fi
+
+if [ -z "$title" ]; then
+  title="Terminal Notification"
+fi
+
+osascript -e "display notification \"${message}\" with title \"${title}\""
+
