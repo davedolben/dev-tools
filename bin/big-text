@@ -1,0 +1,22 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pyfiglet"]
+# ///
+
+import sys
+import pyfiglet
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: big-text <string>", file=sys.stderr)
+        sys.exit(1)
+
+    text = sys.argv[1]
+    filtered = "".join(c for c in text if c.isalnum() or c == " ")
+
+    result = pyfiglet.figlet_format(filtered, font="colossal")
+    print(result)
+
+if __name__ == "__main__":
+    main()
