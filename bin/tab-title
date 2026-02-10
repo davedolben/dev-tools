@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+title="$1"
+
+if [ -z "$title" ]; then
+  echo "Missing title"
+  exit 1
+fi
+
+# OSC 1 sets the tab title, OSC 2 sets the window title
+printf "\e]1;${title}\a"
+printf "\e]2;${title}\a"
