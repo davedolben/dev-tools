@@ -17,8 +17,11 @@ require('telescope').setup{
 require('telescope').load_extension('fzf');
 
 -- These are equivalent to require('lspconfig').ts_ls.setup{}
-vim.lsp.config('ts_ls', {})
-vim.lsp.config('gopls', {})
+vim.lsp.config('ts_ls', {
+  cmd = { 'npx', 'typescript-language-server', '--stdio' },
+}) -- TODO: switch to tsgo?
+vim.lsp.enable('ts_ls')
+vim.lsp.enable('gopls')
 
 -- Disable LSP syntax highlighting for now, since it does some weird stuff with
 -- type imports in typescript.
