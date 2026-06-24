@@ -52,13 +52,16 @@ fi
 
 build fileserver fileserver
 build filedrop filedrop
-build babysitter babysitter
+build babysitter/cmd/server babysitter
+build babysitter/cmd/mcp babysitter-mcp
 build notes notes-server
 build captains_chair captains-chair
 build todo-cli todo-cli
 build timer timer-cli
 build pastebin pastebin
 build s3-upload s3-upload
+build tcp-proxy tcp-proxy
+build directory-annotator directory-annotator
 
 (
   # Clear the environment variables (just in this subshell) so we can execute the codegen step

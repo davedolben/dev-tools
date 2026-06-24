@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/davedolben/dev-tools/go/babysitter"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,7 +31,7 @@ func sendJson(conn *websocket.Conn, msg interface{}) error {
 }
 
 // List of currently running tasks so we can send them to new connections.
-var gRunningTasks map[string][]Signal
+var gRunningTasks map[string][]babysitter.Signal
 var gRunningTasksMux sync.Mutex
 
 func startBackgroundReader(router *MessageRouter) {
@@ -42,7 +43,7 @@ func startBackgroundReader(router *MessageRouter) {
 			gRunningTasksMux.Lock()
 			if sig.Type == "start" {
 				// Add to running tasks list
-				gRunningTasks[mapKey] = []Signal{sig}
+				gRunningTasks[mapKey] = []babysitter.Signal{sig}
 			} else if sig.Type == "success" || sig.Type == "failure" {
 				// Remove from running tasks list if it exists
 				delete(gRunningTasks, mapKey)
@@ -114,7 +115,7 @@ func handleWs(router *MessageRouter) http.HandlerFunc {
 }
 
 func registerHandlers(router *MessageRouter) {
-	gRunningTasks  = make(map[string][]Signal)
+	gRunningTasks  = make(map[string][]babysitter.Signal)
 	startBackgroundReader(router)
 	http.HandleFunc("/api/babysitter/ws", handleWs(router))
 }
