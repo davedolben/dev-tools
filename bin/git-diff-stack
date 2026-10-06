@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+base=${1:-master}
+prev=$base
+
+# Walk master..HEAD oldest-first and stop at each commit that is a branch tip.
+for commit in $(git rev-list --reverse "$base..HEAD"); do
+  for branch in $(git for-each-ref --points-at "$commit" --format='%(refname:short)' refs/heads/); do
+    echo "== $prev -> $branch"
+    git diff --stat "$prev" "$branch"
+    echo
+    prev=$branch
+  done
+done

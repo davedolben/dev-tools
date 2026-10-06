@@ -19,5 +19,5 @@ while [ "$#" -ge "1" ]; do
   esac
 done
 
-git log --graph --format="%C(auto,yellow)%h%Creset %C(auto,green)%an%Creset${format_extras} %s %C(auto)%d%Creset" "$@"
+git log --graph --format="%C(auto,yellow)%h%Creset %C(auto)%d%Creset %C(auto,blue)%an%Creset${format_extras} %s" --color=always "$@" | less -R -S -X
 

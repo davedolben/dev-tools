@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 1 ] || ! [[ "$1" =~ ^[0-9]+$ ]]; then
+  echo "usage: $(basename "$0") N" >&2
+  exit 1
+fi
+
+# Walk first-parent history from HEAD, printing one line of branch refs per commit.
+git log --first-parent --format='%D' --decorate=short \
+  --decorate-refs=refs/heads/ --decorate-refs=refs/remotes/ \
+  --decorate-refs-exclude='refs/remotes/*/HEAD' HEAD |
+  awk -v n="$1" '
+    {
+      sub(/^HEAD -> /, "")
+      count = split($0, refs, ", ")
+      best = ""
+      for (i = 1; i <= count; i++) {
+        r = refs[i]
+        if (r == "" || r == "HEAD") continue
+        # Prefer origin/ refs, then the alphabetically-earliest name.
+        if (best == "" || ((r ~ /^origin\//) && !(best ~ /^origin\//)) ||
+            (((r ~ /^origin\//) == (best ~ /^origin\//)) && r < best)) best = r
+      }
+      if (best == "") next
+      if (n-- == 0) { print best; found = 1; exit }
+    }
+    END { if (!found) { print "no branch found at that depth" > "/dev/stderr"; exit 1 } }
+  '
