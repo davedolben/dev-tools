@@ -1,4 +1,5 @@
 import type { Editor, TLShape, TLShapePartial } from 'tldraw'
+import { getCardFitChanges, isCardShape } from '../card/CardShapeUtil'
 import { isListShape } from '../list/layout'
 import { COLUMN_TYPE, ROW_TYPE, type StackShape } from './StackShapeUtil'
 
@@ -23,6 +24,11 @@ interface Item {
 }
 
 function measure(editor: Editor, shape: TLShape): Item {
+  // Like a list, a card's height follows its contents, so only its width can be stretched.
+  if (isCardShape(shape)) {
+    const b = editor.getShapeGeometry(shape).bounds
+    return { shape, bx: 0, by: 0, w: b.w, h: b.h, stretchW: true, stretchH: false }
+  }
   const props = shape.props as { w?: unknown; h?: unknown }
   // Box shapes fill their slot; anything else (text, drawings, images) keeps its size.
   const isBox =
@@ -98,9 +104,13 @@ export function getStackLayoutChanges(editor: Editor, stack: StackShape, settle 
     }
     const { shape } = item
     const pos = { [main.pos]: cursor - item[main.offset], [cross.pos]: STACK_PAD - item[cross.offset] }
-    const props: Record<string, number> = {}
-    if (item[main.stretch] && Math.abs(item[main.size] - size) > EPSILON) props[main.size] = size
-    if (item[cross.stretch] && Math.abs(item[cross.size] - innerCross) > EPSILON) props[cross.size] = innerCross
+    let props: Record<string, number | boolean> = {}
+    if (isCardShape(shape)) {
+      props = getCardFitChanges(shape, isRow ? size : innerCross)
+    } else {
+      if (item[main.stretch] && Math.abs(item[main.size] - size) > EPSILON) props[main.size] = size
+      if (item[cross.stretch] && Math.abs(item[cross.size] - innerCross) > EPSILON) props[cross.size] = innerCross
+    }
 
     if (
       Math.abs(shape.x - pos.x) > EPSILON ||

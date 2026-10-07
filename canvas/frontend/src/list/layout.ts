@@ -1,4 +1,5 @@
 import type { Editor, TLShape, TLShapePartial } from 'tldraw'
+import { getCardFitChanges, isCardShape } from '../card/CardShapeUtil'
 import { LIST_TYPE, type ListShape } from './ListShapeUtil'
 
 export const LIST_HEADER_H = 36
@@ -21,6 +22,8 @@ interface Item {
 }
 
 function measure(editor: Editor, shape: TLShape): Item {
+  // Cards stretch to the list width, but their height follows their text.
+  if (isCardShape(shape)) return { shape, bx: 0, by: 0, h: editor.getShapeGeometry(shape).bounds.h, stretch: true }
   const props = shape.props as { w?: unknown; h?: unknown }
   // Box shapes stretch to the list width; anything else (text, drawings, images) keeps its size.
   const stretch =
@@ -73,15 +76,20 @@ export function getListLayoutChanges(editor: Editor, list: ListShape, settle = f
     const x = LIST_PAD - item.bx
     const y = cursor - item.by
     const { shape } = item
-    const widthChanged = item.stretch && Math.abs((shape.props as { w: number }).w - innerW) > EPSILON
-    if (Math.abs(shape.x - x) > EPSILON || Math.abs(shape.y - y) > EPSILON || widthChanged || shape.rotation !== 0) {
+    const props = isCardShape(shape)
+      ? getCardFitChanges(shape, innerW)
+      : item.stretch && Math.abs((shape.props as { w: number }).w - innerW) > EPSILON
+        ? { w: innerW }
+        : {}
+    const propsChanged = Object.keys(props).length > 0
+    if (Math.abs(shape.x - x) > EPSILON || Math.abs(shape.y - y) > EPSILON || propsChanged || shape.rotation !== 0) {
       changes.push({
         id: shape.id,
         type: shape.type,
         x,
         y,
         rotation: 0,
-        ...(widthChanged ? { props: { w: innerW } } : {}),
+        ...(propsChanged ? { props } : {}),
         // Generic over every shape type, which TS can't narrow; `w` was checked to exist above.
       } as TLShapePartial)
     }

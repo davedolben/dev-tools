@@ -49,6 +49,14 @@ Layout helpers, like auto-layout frames in a design tool. Pick the column or row
 - Resize the column or row and its contents follow. Drag widgets in, out, and along it to reorder, same as a list.
 - Click or drag the padding around the edge to select or move it.
 
+## Cards
+
+A text box with a border and padding. Pick the card tool (fifth toolbar button), click the canvas, and type. It behaves like tldraw's text tool: the card grows with its text, drag a side handle to set a fixed width, and the style panel changes its font, size, and color. Leaving a card empty deletes it.
+
+- In a list, a card fills the list's width and its height fits its text.
+- In a row or column, a card fills its slot's width, and its height fits its text.
+- Dragged back onto the canvas, a card goes back to fitting its text.
+
 ## Layout
 
 - `backend/app.py`: REST API (`/api/canvases`, `/api/unfurl`)
@@ -56,5 +64,6 @@ Layout helpers, like auto-layout frames in a design tool. Pick the column or row
 - `frontend/src/url-card/`: the URL card shape, tool, and paste handler
 - `frontend/src/list/`: the list shape; `layout.ts` holds the stacking logic
 - `frontend/src/stack/`: the column and row shapes; `layout.ts` holds the flex-style layout
+- `frontend/src/card/`: the card shape, a subclass of tldraw's text shape
 - `frontend/src/customShapes.tsx`: registers the custom shapes and the toolbar
 - `frontend/src/CanvasEditor.tsx`: editor page with debounced autosave

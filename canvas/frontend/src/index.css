@@ -473,3 +473,12 @@ body,
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 12px;
 }
+
+/* Card shape: a text shape with a border and padding */
+.card-shape {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--color-muted-2, #ddd);
+  background: var(--color-panel, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
