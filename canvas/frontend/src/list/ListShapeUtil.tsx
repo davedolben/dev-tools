@@ -65,6 +65,12 @@ export class ListShapeUtil extends BaseFrameLikeShapeUtil<ListShape> {
     return getListLayoutChanges(this.editor, shape)
   }
 
+  // Otherwise tldraw scales the children along with the list, which moves them and can reorder them.
+  // The layout restretches them to the new width anyway.
+  override canResizeChildren() {
+    return false
+  }
+
   override onResize(shape: ListShape, info: TLResizeInfo<ListShape>) {
     // Height always comes from the children, so only the width is really resizable.
     const resized = resizeBox(shape, info, { minWidth: 200 })

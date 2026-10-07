@@ -458,3 +458,18 @@ body,
   color: var(--color-text-3, #888);
   font-size: 13px;
 }
+
+/* Column / row shapes */
+.stack-shape {
+  border-radius: 6px;
+  border: 1px dashed var(--color-muted-2, #ccc);
+}
+.stack-shape-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-3, #aaa);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 12px;
+}

@@ -7,6 +7,7 @@ import {
   ToolbarItem,
 } from 'tldraw'
 import { LIST_TYPE, listShapeUtils, listTools, listUiOverrides, registerListSideEffects } from './list'
+import { COLUMN_TYPE, ROW_TYPE, registerStackSideEffects, stackShapeUtils, stackTools, stackUiOverrides } from './stack'
 import {
   registerUrlCardPasteHandler,
   URL_CARD_TYPE,
@@ -15,13 +16,14 @@ import {
   urlCardUiOverrides,
 } from './url-card'
 
-export const customShapeUtils = [...urlCardShapeUtils, ...listShapeUtils]
-export const customTools = [...urlCardTools, ...listTools]
+export const customShapeUtils = [...urlCardShapeUtils, ...listShapeUtils, ...stackShapeUtils]
+export const customTools = [...urlCardTools, ...listTools, ...stackTools]
 
 export const customUiOverrides: TLUiOverrides = {
   tools(editor, tools, helpers) {
     tools = urlCardUiOverrides.tools!(editor, tools, helpers)
-    return listUiOverrides.tools!(editor, tools, helpers)
+    tools = listUiOverrides.tools!(editor, tools, helpers)
+    return stackUiOverrides.tools!(editor, tools, helpers)
   },
 }
 
@@ -31,6 +33,8 @@ export const customComponents: TLComponents = {
       {/* Placed first so they never get pushed into the toolbar's overflow menu. */}
       <ToolbarItem tool={URL_CARD_TYPE} />
       <ToolbarItem tool={LIST_TYPE} />
+      <ToolbarItem tool={COLUMN_TYPE} />
+      <ToolbarItem tool={ROW_TYPE} />
       <DefaultToolbarContent />
     </DefaultToolbar>
   ),
@@ -38,5 +42,10 @@ export const customComponents: TLComponents = {
 
 export function registerCustomShapeHandlers(editor: Editor) {
   registerUrlCardPasteHandler(editor)
-  return registerListSideEffects(editor)
+  const disposeList = registerListSideEffects(editor)
+  const disposeStack = registerStackSideEffects(editor)
+  return () => {
+    disposeList()
+    disposeStack()
+  }
 }

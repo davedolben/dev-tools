@@ -41,11 +41,20 @@ Pick the list tool (second toolbar button, or `Shift+L`), click the canvas, and 
 - Drag a widget up or down inside the list to reorder it; a gap opens where it will land. Drag it out to remove it.
 - Drag the header to move the list; double-click the header to rename it. Resizing only changes the width, since height follows the contents.
 
+## Columns and rows
+
+Layout helpers, like auto-layout frames in a design tool. Pick the column or row tool (third and fourth toolbar buttons) and click the canvas.
+
+- Box-shaped widgets inside fill the cross axis and split the main axis evenly. Fixed-size widgets (text, drawings, images) keep their size, and lists keep their height. Nest rows and columns to build grids.
+- Resize the column or row and its contents follow. Drag widgets in, out, and along it to reorder, same as a list.
+- Click or drag the padding around the edge to select or move it.
+
 ## Layout
 
 - `backend/app.py`: REST API (`/api/canvases`, `/api/unfurl`)
 - `backend/unfurl.py`: page title fetching and GitHub PR lookup
 - `frontend/src/url-card/`: the URL card shape, tool, and paste handler
 - `frontend/src/list/`: the list shape; `layout.ts` holds the stacking logic
-- `frontend/src/customShapes.tsx`: registers both shapes and the toolbar
+- `frontend/src/stack/`: the column and row shapes; `layout.ts` holds the flex-style layout
+- `frontend/src/customShapes.tsx`: registers the custom shapes and the toolbar
 - `frontend/src/CanvasEditor.tsx`: editor page with debounced autosave
