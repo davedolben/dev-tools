@@ -19,11 +19,14 @@ search_up() {
 check_for_script() {
   local dir="$1"
   local script="$2"
-  path="${dir}/${script}.sh"
-  ls "$path" > /dev/null 2>&1
-  if [ "$?" -eq "0" ]; then
-    echo "$path"
-  fi
+  local ext
+  for ext in sh py; do
+    path="${dir}/${script}.${ext}"
+    if [ -f "$path" ]; then
+      echo "$path"
+      return
+    fi
+  done
 }
 
 search_for_command() {
@@ -38,7 +41,7 @@ search_for_command() {
   #exit 0
   # fi
 
-  ls -1 "${dfiles_dir}" | sed -e 's/\.sh//' | sort | fzf $query_args --border --preview-window up --preview "cat ${dfiles_dir}/{}.sh"
+  ls -1 "${dfiles_dir}" | sed -E 's/\.(sh|py)$//' | sort -u | fzf $query_args --border --preview-window up --preview "cat ${dfiles_dir}/{}.sh ${dfiles_dir}/{}.py 2>/dev/null"
 }
 
 if [ "$1" == "-v" ]; then
